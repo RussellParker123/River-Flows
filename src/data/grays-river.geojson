@@ -1,0 +1,18 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Grays River - lower course" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-123.6712, 46.2820],
+          [-123.6600, 46.2950],
+          [-123.6400, 46.3100],
+          [-123.6090, 46.3360]
+        ]
+      }
+    }
+  ]
+}

@@ -1,12 +1,12 @@
-import './App.css';
+import '../App.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, useMap, Polyline, Marker, Popup, LayersControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useState, useRef, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import usStates from './data/us-states.json';
-import { fetchUSGSFlow, fetchHistoricalFlow } from './data/fetchUSGSFlow';
-import { rivers } from './data/rivers';
+import usStates from './us-states.json';
+import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
+import { rivers } from './rivers';
 
 // State bounds for zoom focusing
 const STATE_BOUNDS = {

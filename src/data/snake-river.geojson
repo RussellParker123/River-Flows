@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Snake River - Jackson/Teton section" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-110.6869, 43.4799],
+          [-110.6840, 43.5100],
+          [-110.7040, 43.5600],
+          [-110.7400, 43.6200],
+          [-110.7800, 43.6800]
+        ]
+      }
+    }
+  ]
+}
