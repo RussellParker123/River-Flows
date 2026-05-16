@@ -798,7 +798,7 @@ export const rivers = [
     state: 'CO',
     grade: 'III',
     usgs_gage: '09070500',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=37',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -825,7 +825,7 @@ export const rivers = [
     state: 'CO',
     grade: 'III',
     usgs_gage: '09081600',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=37',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -852,7 +852,7 @@ export const rivers = [
     state: 'CO',
     grade: 'III',
     usgs_gage: '07087200',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=37',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -879,7 +879,7 @@ export const rivers = [
     state: 'CO',
     grade: 'II',
     usgs_gage: '06710500',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=37',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -958,7 +958,7 @@ export const rivers = [
     state: 'UT',
     grade: 'II',
     usgs_gage: '10171000',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -985,7 +985,7 @@ export const rivers = [
     state: 'UT',
     grade: 'III',
     usgs_gage: '09402200',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -1012,7 +1012,7 @@ export const rivers = [
     state: 'ID',
     grade: 'II',
     usgs_gage: '10077000',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -1039,7 +1039,7 @@ export const rivers = [
     state: 'ID',
     grade: 'III',
     usgs_gage: '13185000',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -1066,7 +1066,7 @@ export const rivers = [
     state: 'ID',
     grade: 'IV',
     usgs_gage: '13329500',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/E4e5utiqGLQ',
     usgs_data: {
       current_flow: null,
@@ -1093,7 +1093,7 @@ export const rivers = [
     state: 'ID',
     grade: 'IV',
     usgs_gage: '13337000',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -1120,7 +1120,7 @@ export const rivers = [
     state: 'ID',
     grade: 'II',
     usgs_gage: '13342500',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
     usgs_data: {
       current_flow: null,
@@ -1147,7 +1147,7 @@ export const rivers = [
     state: 'ID',
     grade: 'IV',
     usgs_gage: '13043000',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Quaternary glacial deposits and moraines',
     fish_species: 'Cutthroat trout, brown trout, whitefish',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
@@ -1180,7 +1180,7 @@ export const rivers = [
     state: 'ID',
     grade: 'IV',
     usgs_gage: '13042500',
-    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=78',
+    forum_url: 'https://www.americanwhitewater.org',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Quaternary glacial deposits',
     fish_species: 'Cutthroat trout, brown trout, whitefish',
     youtube_url: 'https://www.youtube.com/embed/s3DzGxQNZiI',
