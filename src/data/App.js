@@ -334,6 +334,7 @@ function App() {
   const [selectedRiver, setSelectedRiver] = useState(null);
   const [hoveredRiver, setHoveredRiver] = useState(null);
   const [highlightedRiver, setHighlightedRiver] = useState(null);
+  const [showLegend, setShowLegend] = useState(false);
   const geoJsonRef = useRef();
 
   const onEachState = (feature, layer) => {
@@ -504,6 +505,14 @@ function App() {
     });
   }, [selectedState]);
 
+  useEffect(() => {
+    if (selectedState) {
+      setShowLegend(true);
+      const timer = setTimeout(() => setShowLegend(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedState]);
+
   if (view === 'home') {
     return (
       <div className="App">
@@ -659,28 +668,38 @@ function App() {
         </MapContainer>
 
         {/* Legend */}
-        <div style={{ 
-          padding: '8px 12px', 
-          position: 'absolute', 
-          bottom: isMobile && selectedRiver ? '10px' : isMobile ? '60px' : 0, 
-          left: 0, 
-          zIndex: isMobile && selectedRiver ? 400 : 500, 
-          backgroundColor: 'white', 
-          borderRadius: '4px', 
-          margin: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          fontSize: isMobile ? '0.85em' : '0.95em',
-          maxWidth: '200px'
-        }}>
-          <strong>Legend — Rapid classes</strong>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
-            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['I'], marginRight: 8 }}></span>Class I (green)</li>
-            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['II'], marginRight: 8 }}></span>Class II (blue)</li>
-            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['III'], marginRight: 8 }}></span>Class III (purple)</li>
-            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['IV'], marginRight: 8 }}></span>Class IV (red)</li>
-            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['V'], marginRight: 8 }}></span>Class V (black)</li>
-          </ul>
-        </div>
+        {showLegend && (
+          <div style={{ 
+            padding: '6px 10px', 
+            position: 'absolute', 
+            bottom: isMobile && selectedRiver ? '10px' : isMobile ? '60px' : 0, 
+            left: 0, 
+            zIndex: isMobile && selectedRiver ? 400 : 500, 
+            backgroundColor: 'white', 
+            borderRadius: '4px', 
+            margin: '8px', 
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            fontSize: isMobile ? '0.75em' : '0.8em',
+            maxWidth: '160px',
+            animation: 'fadeOut 0.5s ease-in 4.5s forwards',
+            opacity: 1
+          }}>
+            <style>{`
+              @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; pointer-events: none; }
+              }
+            `}</style>
+            <strong style={{ fontSize: '0.9em' }}>Rapid Classes</strong>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '6px 0 0 0' }}>
+              <li style={{ margin: '3px 0' }}><span style={{ display: 'inline-block', width: 12, height: 10, background: gradeColors['I'], marginRight: 6 }}></span><span style={{ fontSize: '0.9em' }}>I</span></li>
+              <li style={{ margin: '3px 0' }}><span style={{ display: 'inline-block', width: 12, height: 10, background: gradeColors['II'], marginRight: 6 }}></span><span style={{ fontSize: '0.9em' }}>II</span></li>
+              <li style={{ margin: '3px 0' }}><span style={{ display: 'inline-block', width: 12, height: 10, background: gradeColors['III'], marginRight: 6 }}></span><span style={{ fontSize: '0.9em' }}>III</span></li>
+              <li style={{ margin: '3px 0' }}><span style={{ display: 'inline-block', width: 12, height: 10, background: gradeColors['IV'], marginRight: 6 }}></span><span style={{ fontSize: '0.9em' }}>IV</span></li>
+              <li style={{ margin: '3px 0' }}><span style={{ display: 'inline-block', width: 12, height: 10, background: gradeColors['V'], marginRight: 6 }}></span><span style={{ fontSize: '0.9em' }}>V</span></li>
+            </ul>
+          </div>
+        )}
 
         {/* Mobile info toggle button */}
         {isMobile && selectedRiver && (
