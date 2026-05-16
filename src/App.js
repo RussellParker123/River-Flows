@@ -8,6 +8,14 @@ import usStates from './us-states.json';
 import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
 
+// Fix for default Leaflet marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
 // State bounds for zoom focusing
 const STATE_BOUNDS = {
   'CO': [[36.9956, -109.0504], [41.0023, -102.0423]],  // Southwest to Northeast bounds
