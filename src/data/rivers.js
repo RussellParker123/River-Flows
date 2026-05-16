@@ -2,12 +2,13 @@ export const rivers = [
   {
     name: 'Snake River',
     state: 'WY',
-    grade: 'III',
+    grade: 'I',
     usgs_gage: '13010050',
     forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=85',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone; Quaternary lava flows',
     fish_species: 'Cutthroat trout, brown trout, mountain whitefish, sculpin',
     youtube_url: 'https://www.youtube.com/embed/aOhMKO6Otas',
+    description: 'Dead Mans to Moose - Scenic Class I Float with Route Finding. Beautiful float with some tricky navigation due to underwater obstacles. Moderate current, scenic views, requires good boat control and route finding skills.',
     usgs_data: {
       current_flow: null,
       record_high: 36300,
@@ -16,16 +17,21 @@ export const rivers = [
     },
     segments: [
       {
-        name: 'Jackson Lake to South Park',
-        grade: 'III',
+        name: 'Dead Mans to Moose',
+        grade: 'I',
         coordinates: [
-          [-110.6869, 43.4799],
-          [-110.6840, 43.5100],
-          [-110.7040, 43.5600],
-          [-110.7400, 43.6200],
-          [-110.7800, 43.6800],
-          [-110.8100, 43.7200],
-          [-110.8300, 43.7400]
+          [-110.6272649, 43.7609535],
+          [-110.6300, 43.7550],
+          [-110.6350, 43.7480],
+          [-110.6400, 43.7400],
+          [-110.6500, 43.7300],
+          [-110.6600, 43.7200],
+          [-110.6700, 43.7100],
+          [-110.6800, 43.7000],
+          [-110.6900, 43.6900],
+          [-110.7000, 43.6800],
+          [-110.7100, 43.6700],
+          [-110.7150194, 43.6548943]
         ]
       }
     ]
