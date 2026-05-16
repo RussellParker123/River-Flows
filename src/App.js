@@ -565,14 +565,15 @@ function App() {
         </div>
       )}
 
-      {/* MAP - LEFT SIDE on desktop, FULL on mobile */}
+      {/* MAP - LEFT SIDE on desktop, TOP on mobile */}
       <div style={{ 
-        flex: isMobile ? 1 : 2, 
+        flex: isMobile ? '0 0 40%' : 2, 
         width: '100%', 
-        height: isMobile ? 'calc(100vh - 50px)' : '100%', 
+        height: '100%', 
         overflow: 'hidden', 
         position: 'relative',
-        marginTop: isMobile ? '50px' : 0
+        marginTop: isMobile ? '50px' : 0,
+        borderBottom: isMobile ? '3px solid #8e44ad' : 'none'
       }}>
         {/* Back button - desktop only */}
         {!isMobile && (
@@ -700,6 +701,86 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* MOBILE RIVER LIST - Shows below map */}
+      {isMobile && selectedState && (
+        <div style={{
+          flex: '1 1 60%',
+          width: '100%',
+          backgroundColor: '#fff',
+          borderTop: '2px solid #8e44ad',
+          overflow: 'auto',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+          padding: '10px'
+        }}>
+          {filteredRivers.map((river) => (
+            <div
+              key={river.name}
+              style={{
+                padding: '12px',
+                marginBottom: '10px',
+                backgroundColor: '#f9f9f9',
+                border: `2px solid ${gradeColors[river.grade]}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+            >
+              <h3 style={{ margin: '0 0 8px 0', color: gradeColors[river.grade], fontSize: '1.1em' }}>
+                {river.name} <span style={{ fontSize: '0.85em', color: '#666' }}>Class {river.grade}</span>
+              </h3>
+              <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
+                Current Flow: <strong>{flows[river.name] !== undefined ? `${Math.round(flows[river.name])} CFS` : 'Loading...'}</strong>
+              </p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setHighlightedRiver(highlightedRiver === river.name ? null : river.name)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: gradeColors[river.grade],
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.85em',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {highlightedRiver === river.name ? '🔍' : '🔍 Highlight'}
+                </button>
+
+                <button
+                  onClick={() => setSelectedRiver(selectedRiver === river.name ? null : river.name)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#666',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.85em',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {selectedRiver === river.name ? '▼ Hide' : '▶ Show'}
+                </button>
+              </div>
+
+              {selectedRiver === river.name && (
+                <div style={{ marginTop: '12px', borderTop: '1px solid #ddd', paddingTop: '12px' }}>
+                  <p style={{ margin: '8px 0', fontSize: '0.9em', color: '#555' }}>
+                    {river.description}
+                  </p>
+                  <FlowChart river={river} currentFlow={flows[river.name]} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* MOBILE SIDE PANEL - Slides in from bottom when river selected */}
       {isMobile && selectedRiver && (
