@@ -796,6 +796,28 @@ function App() {
                 >
                   {selectedRiver === river.name ? '▼ Hide' : '▶ Show'}
                 </button>
+
+                {river.forum_url && (
+                  <a
+                    href={river.forum_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      padding: '6px 12px',
+                      backgroundColor: '#ff8c00',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.85em',
+                      fontWeight: 'bold',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    💬 Forum
+                  </a>
+                )}
               </div>
 
               {selectedRiver === river.name && (
