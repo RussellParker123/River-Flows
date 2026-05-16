@@ -1,4 +1,4 @@
-import '../App.css';
+import './App.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, useMap, Polyline, Marker, Popup, LayersControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
