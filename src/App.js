@@ -60,7 +60,14 @@ function HomePage({ onNavigateToMap }) {
       setFlows(flowData);
       setLoading(false);
     };
+    
+    // Initial fetch
     fetchAllFlows();
+    
+    // Refresh every 5 minutes (300000 ms) to keep data current
+    const interval = setInterval(fetchAllFlows, 300000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return (
