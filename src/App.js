@@ -529,31 +529,39 @@ function App() {
           zIndex: 999, 
           backgroundColor: '#fff', 
           borderBottom: '2px solid #ddd',
-          padding: '10px',
+          padding: '12px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          height: '50px',
+          boxSizing: 'border-box'
         }}>
           <button
             onClick={() => {
               setView('home');
               setSelectedState(null);
+              setSelectedRiver(null);
             }}
             style={{
-              padding: '8px 12px',
+              padding: '10px 15px',
               backgroundColor: '#8e44ad',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontWeight: 'bold',
-              fontSize: '0.9em'
+              fontSize: '0.95em',
+              transition: 'all 0.2s ease',
+              touchAction: 'manipulation',
+              userSelect: 'none'
             }}
+            onTouchStart={(e) => e.currentTarget.style.opacity = '0.7'}
+            onTouchEnd={(e) => e.currentTarget.style.opacity = '1'}
           >
             ← Back
           </button>
-          <h1 style={{ margin: 0, fontSize: '1.2em', color: '#333' }}>River Flows</h1>
-          <div style={{ width: '60px' }}></div>
+          <h1 style={{ margin: 0, fontSize: '1.2em', color: '#333', flex: 1, textAlign: 'center' }}>River Flows</h1>
+          <div style={{ width: '70px' }}></div>
         </div>
       )}
 
@@ -653,14 +661,15 @@ function App() {
         <div style={{ 
           padding: '8px 12px', 
           position: 'absolute', 
-          bottom: isMobile ? 50 : 0, 
+          bottom: isMobile && selectedRiver ? '10px' : isMobile ? '60px' : 0, 
           left: 0, 
-          zIndex: 500, 
+          zIndex: isMobile && selectedRiver ? 400 : 500, 
           backgroundColor: 'white', 
           borderRadius: '4px', 
           margin: '8px', 
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          fontSize: isMobile ? '0.85em' : '0.95em'
+          fontSize: isMobile ? '0.85em' : '0.95em',
+          maxWidth: '200px'
         }}>
           <strong>Legend — Rapid classes</strong>
           <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
@@ -674,40 +683,38 @@ function App() {
 
         {/* Mobile info toggle button */}
         {isMobile && selectedRiver && (
-          <button
-            onClick={() => setSelectedRiver(null)}
-            style={{
-              position: 'absolute',
-              bottom: '10px',
-              right: '10px',
-              zIndex: 600,
-              padding: '10px 15px',
-              backgroundColor: '#ff8c00',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '0.9em'
-            }}
-          >
-            ✕ Close
-          </button>
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 500,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            fontSize: '0.85em',
+            fontWeight: 'bold',
+            color: '#333'
+          }}>
+            👆 Scroll up to see more
+          </div>
         )}
       </div>
 
-      {/* MOBILE SIDE PANEL - Slides in from right when river selected */}
+      {/* MOBILE SIDE PANEL - Slides in from bottom when river selected */}
       {isMobile && selectedRiver && (
         <div style={{
           position: 'fixed',
           bottom: 0,
           left: 0,
           right: 0,
+          top: '50px',
           zIndex: 1001,
           backgroundColor: '#fff',
           borderTop: '3px solid #8e44ad',
-          maxHeight: '60vh',
           overflow: 'auto',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
           animation: 'slideUp 0.3s ease',
           boxShadow: '0 -2px 10px rgba(0,0,0,0.2)'
         }}>
@@ -722,31 +729,49 @@ function App() {
             }
           `}</style>
           
-          <div style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, color: gradeColors[rivers.find(r => r.name === selectedRiver)?.grade || 'III'], fontSize: '1.3em' }}>
-                {selectedRiver}
-              </h2>
-              <button
-                onClick={() => setSelectedRiver(null)}
-                style={{
-                  backgroundColor: '#ff6b6b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  fontSize: '18px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                ✕
-              </button>
-            </div>
+          <div style={{ 
+            position: 'sticky',
+            top: 0,
+            padding: '15px', 
+            borderBottom: '2px solid #ddd',
+            backgroundColor: '#fff',
+            zIndex: 10,
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center'
+          }}>
+            <h2 style={{ 
+              margin: 0, 
+              color: gradeColors[rivers.find(r => r.name === selectedRiver)?.grade || 'III'], 
+              fontSize: '1.3em',
+              flex: 1
+            }}>
+              {selectedRiver}
+            </h2>
+            <button
+              onClick={() => setSelectedRiver(null)}
+              style={{
+                backgroundColor: '#ff6b6b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                fontSize: '20px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                flexShrink: 0,
+                marginLeft: '10px',
+                transition: 'all 0.2s ease'
+              }}
+              onTouchStart={(e) => e.currentTarget.style.opacity = '0.7'}
+              onTouchEnd={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              ✕
+            </button>
           </div>
 
-          <div style={{ padding: '15px' }}>
+          <div style={{ padding: '15px', paddingBottom: '80px' }}>
             {rivers.find(r => r.name === selectedRiver) && (
               <FlowChart 
                 river={rivers.find(r => r.name === selectedRiver)} 
