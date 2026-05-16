@@ -45,6 +45,7 @@ function StateZoom({ selectedState }) {
 function HomePage({ onNavigateToMap }) {
   const [flows, setFlows] = useState({});
   const [loading, setLoading] = useState(true);
+  const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     // Fetch live flow data for all rivers
@@ -63,15 +64,15 @@ function HomePage({ onNavigateToMap }) {
   }, []);
 
   return (
-    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', fontSize: '2.5em', marginBottom: '10px' }}>
-        🏞️ River Flows for Kayakers & Boaters
+    <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1 style={{ textAlign: 'center', fontSize: isMobile ? '1.8em' : '2.5em', marginBottom: '10px' }}>
+        🏞️ River Flows
       </h1>
-      <p style={{ textAlign: 'center', fontSize: '1.1em', color: '#666', marginBottom: '40px' }}>
+      <p style={{ textAlign: 'center', fontSize: isMobile ? '0.95em' : '1.1em', color: '#666', marginBottom: isMobile ? '20px' : '40px' }}>
         Real-time water flow data for your next adventure
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? '15px' : '20px' }}>
         {rivers
           .sort((a, b) => {
             // Sort by grade: V, IV, III, II, I (hardest to easiest)
@@ -156,6 +157,7 @@ function HomePage({ onNavigateToMap }) {
 function FlowChart({ river, currentFlow }) {
   const [historicalData, setHistoricalData] = useState([]);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
+  const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     if (river.usgs_gage) {
@@ -190,8 +192,8 @@ function FlowChart({ river, currentFlow }) {
   ];
 
   return (
-    <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f5f5f5', borderRadius: '12px' }}>
-      <h3 style={{ marginTop: 0, color: '#333' }}>Flow Analysis - {river.name}</h3>
+    <div style={{ marginTop: '30px', padding: isMobile ? '15px' : '20px', backgroundColor: '#f5f5f5', borderRadius: '12px', marginBottom: isMobile ? '20px' : '0' }}>
+      <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}</h3>
       
       {river.youtube_url && river.youtube_url !== 'https://www.youtube.com/embed/placeholder' && (
         <div style={{ marginBottom: '30px', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden' }}>
@@ -218,19 +220,19 @@ function FlowChart({ river, currentFlow }) {
       )}
 
       {river.description && (
-        <div style={{ marginBottom: '30px', padding: '15px', backgroundColor: '#e8f4f8', borderRadius: '8px', borderLeft: `4px solid ${gradeColors[river.grade]}` }}>
-          <h4 style={{ marginTop: 0, color: '#333' }}>Trip Information</h4>
-          <p style={{ margin: '10px 0', color: '#555', lineHeight: '1.6' }}>{river.description}</p>
+        <div style={{ marginBottom: '30px', padding: isMobile ? '12px' : '15px', backgroundColor: '#e8f4f8', borderRadius: '8px', borderLeft: `4px solid ${gradeColors[river.grade]}` }}>
+          <h4 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1em' : '1.1em' }}>Trip Information</h4>
+          <p style={{ margin: '10px 0', color: '#555', lineHeight: '1.6', fontSize: isMobile ? '0.9em' : '1em' }}>{river.description}</p>
         </div>
       )}
       
       <div style={{ marginBottom: '30px' }}>
-        <h4 style={{ color: '#555', marginBottom: '10px' }}>Monthly Average Flow Pattern</h4>
-        <ResponsiveContainer width="100%" height={300}>
+        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Monthly Average Flow Pattern</h4>
+        <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
           <LineChart data={monthlyData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
+            <XAxis dataKey="month" fontSize={isMobile ? 12 : 14} />
+            <YAxis fontSize={isMobile ? 12 : 14} />
             <Tooltip 
               formatter={(value) => `${Math.round(value)} CFS`}
               labelStyle={{ color: '#000' }}
@@ -241,27 +243,28 @@ function FlowChart({ river, currentFlow }) {
               dataKey="flow" 
               stroke={gradeColors[river.grade]} 
               name="Expected Flow"
-              dot={{ fill: gradeColors[river.grade], r: 4 }}
+              dot={{ fill: gradeColors[river.grade], r: isMobile ? 3 : 4 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div style={{ marginBottom: '30px' }}>
-        <h4 style={{ color: '#555', marginBottom: '10px' }}>Historical Flow - Past Year</h4>
+        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Historical Flow - Past Year</h4>
         {loadingHistorical ? (
           <p style={{ color: '#999', fontStyle: 'italic' }}>Loading historical data...</p>
         ) : historicalData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 350}>
             <LineChart data={historicalData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="date" 
-                angle={-45}
-                textAnchor="end"
-                height={80}
+                angle={isMobile ? 0 : -45}
+                textAnchor={isMobile ? 'middle' : 'end'}
+                height={isMobile ? 60 : 80}
+                fontSize={isMobile ? 11 : 12}
               />
-              <YAxis />
+              <YAxis fontSize={isMobile ? 12 : 14} />
               <Tooltip 
                 formatter={(value) => `${Math.round(value)} CFS`}
                 labelFormatter={(label) => `Date: ${label}`}
@@ -284,12 +287,12 @@ function FlowChart({ river, currentFlow }) {
       </div>
 
       <div>
-        <h4 style={{ color: '#555', marginBottom: '10px' }}>Flow Statistics (CFS)</h4>
-        <ResponsiveContainer width="100%" height={250}>
+        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Flow Statistics (CFS)</h4>
+        <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
           <BarChart data={statsData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
+            <XAxis dataKey="name" fontSize={isMobile ? 11 : 12} />
+            <YAxis fontSize={isMobile ? 12 : 14} />
             <Tooltip 
               formatter={(value) => `${Math.round(value)} CFS`}
               labelStyle={{ color: '#000' }}
@@ -299,7 +302,7 @@ function FlowChart({ river, currentFlow }) {
         </ResponsiveContainer>
       </div>
 
-      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fff', borderRadius: '8px', fontSize: '0.9em' }}>
+      <div style={{ marginTop: '20px', padding: isMobile ? '12px' : '15px', backgroundColor: '#fff', borderRadius: '8px', fontSize: isMobile ? '0.85em' : '0.9em' }}>
         <p style={{ margin: '5px 0' }}><strong>Current:</strong> {currentFlow ? `${Math.round(currentFlow)} CFS` : 'Loading...'}</p>
         <p style={{ margin: '5px 0' }}><strong>Yearly Average:</strong> {Math.round(river.usgs_data.yearly_average)} CFS</p>
         <p style={{ margin: '5px 0' }}><strong>Record High:</strong> {Math.round(river.usgs_data.record_high)} CFS</p>
@@ -485,8 +488,10 @@ function App() {
     );
   }
 
+  const isMobile = window.innerWidth < 768;
+
   return (
-    <div className="App">
+    <div className="App" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <button
         onClick={() => {
           setView('home');
@@ -503,14 +508,25 @@ function App() {
           border: 'none',
           borderRadius: '6px',
           cursor: 'pointer',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          fontSize: isMobile ? '0.9em' : '1em'
         }}
       >
-        ← Back to Home
+        ← Back
       </button>
 
-      <h1 style={{ paddingTop: '50px' }}>River Flows for Kayakers & Boaters</h1>
-      <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ height: '80vh', width: '100%' }}>
+      <h1 style={{ 
+        paddingTop: isMobile ? '50px' : '20px',
+        paddingBottom: '10px',
+        margin: '0',
+        fontSize: isMobile ? '1.3em' : '2em',
+        textAlign: 'center'
+      }}>River Flows</h1>
+      <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ 
+        height: isMobile ? 'calc(100vh - 120px)' : '80vh', 
+        width: '100%',
+        flex: 1
+      }}>
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="OpenStreetMap">
             <TileLayer
