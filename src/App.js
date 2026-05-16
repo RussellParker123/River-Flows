@@ -762,7 +762,15 @@ function App() {
                 {' '}<span style={{ fontSize: '0.85em', color: '#666' }}>Class {river.grade}</span>
               </h3>
               <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
-                Current Flow: <strong>{flows[river.name] !== undefined ? `${Math.round(flows[river.name])} CFS` : 'Loading...'}</strong>
+                Current Flow: <strong>
+                  {flows[river.name] !== undefined ? (
+                    `${Math.round(flows[river.name])} CFS`
+                  ) : (
+                    <span style={{ color: '#999' }}>
+                      No USGS data — <a href="https://www.americanwhitewater.org" target="_blank" rel="noopener noreferrer" style={{ color: '#ff8c00', textDecoration: 'none' }}>Check AWW</a>
+                    </span>
+                  )}
+                </strong>
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
@@ -956,7 +964,15 @@ function App() {
                   </a>
                 </h3>
                 <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
-                  Current Flow: <strong>{flows[river.name] !== undefined ? `${Math.round(flows[river.name])} CFS` : 'Loading...'}</strong>
+                  Current Flow: <strong>
+                    {flows[river.name] !== undefined ? (
+                      `${Math.round(flows[river.name])} CFS`
+                    ) : (
+                      <span style={{ color: '#999' }}>
+                        No USGS data — <a href="https://www.americanwhitewater.org" target="_blank" rel="noopener noreferrer" style={{ color: '#ff8c00', textDecoration: 'none' }}>Check AWW</a>
+                      </span>
+                    )}
+                  </strong>
                 </p>
                 {river.usgs_gage && (
                   <p style={{ margin: '5px 0', fontSize: '0.85em' }}>
