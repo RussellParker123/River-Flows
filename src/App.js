@@ -749,7 +749,17 @@ function App() {
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
             >
               <h3 style={{ margin: '0 0 8px 0', color: gradeColors[river.grade], fontSize: '1.1em' }}>
-                {river.name} <span style={{ fontSize: '0.85em', color: '#666' }}>Class {river.grade}</span>
+                <a 
+                  href={`https://www.americanwhitewater.org/content/River-Guides/?name=${encodeURIComponent(river.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: gradeColors[river.grade], textDecoration: 'none', cursor: 'pointer' }}
+                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                >
+                  {river.name}
+                </a>
+                {' '}<span style={{ fontSize: '0.85em', color: '#666' }}>Class {river.grade}</span>
               </h3>
               <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
                 Current Flow: <strong>{flows[river.name] !== undefined ? `${Math.round(flows[river.name])} CFS` : 'Loading...'}</strong>
@@ -914,7 +924,16 @@ function App() {
                 onMouseLeave={() => setHoveredRiver(null)}
               >
                 <h3 style={{ margin: '0 0 10px 0', color: gradeColors[river.grade] }}>
-                  {river.name} (Grade {river.grade})
+                  <a 
+                    href={`https://www.americanwhitewater.org/content/River-Guides/?name=${encodeURIComponent(river.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: gradeColors[river.grade], textDecoration: 'none', cursor: 'pointer' }}
+                    onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                    onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                  >
+                    {river.name} (Grade {river.grade})
+                  </a>
                 </h3>
                 <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
                   Current Flow: <strong>{flows[river.name] !== undefined ? `${Math.round(flows[river.name])} CFS` : 'Loading...'}</strong>
