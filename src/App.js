@@ -506,7 +506,7 @@ function App() {
   const isMobile = window.innerWidth < 768;
 
   return (
-    <div className="App" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div className="App" style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', overflow: 'hidden' }}>
       <button
         onClick={() => {
           setView('home');
@@ -537,59 +537,58 @@ function App() {
         fontSize: isMobile ? '1.3em' : '2em',
         textAlign: 'center'
       }}>River Flows</h1>
-      <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ 
-        height: isMobile ? 'calc(100vh - 120px)' : '80vh', 
-        width: '100%',
-        flex: 1
-      }}>
-        <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="OpenStreetMap">
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors"
-            />
-          </LayersControl.BaseLayer>
+      
+      <div style={{ flex: 1, width: '100%', overflow: 'hidden', position: 'relative' }}>
+        <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ width: '100%', height: '100%' }}>
+          <LayersControl position="topright">
+            <LayersControl.BaseLayer checked name="OpenStreetMap">
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap contributors"
+              />
+            </LayersControl.BaseLayer>
 
-          <LayersControl.BaseLayer name="Topographic (OpenTopoMap)">
-            <TileLayer
-              url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-              attribution='Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'
-            />
-          </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Topographic (OpenTopoMap)">
+              <TileLayer
+                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                attribution='Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'
+              />
+            </LayersControl.BaseLayer>
 
-          <LayersControl.BaseLayer name="Satellite">
-            <TileLayer
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              attribution="Tiles &copy; Esri"
-            />
-          </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Satellite">
+              <TileLayer
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                attribution="Tiles &copy; Esri"
+              />
+            </LayersControl.BaseLayer>
 
-          <LayersControl.Overlay checked name="States">
-            <GeoJSON
-              data={usStates}
-              style={stateStyle}
-              onEachFeature={onEachState}
-              ref={geoJsonRef}
-            />
-          </LayersControl.Overlay>
+            <LayersControl.Overlay checked name="States">
+              <GeoJSON
+                data={usStates}
+                style={stateStyle}
+                onEachFeature={onEachState}
+                ref={geoJsonRef}
+              />
+            </LayersControl.Overlay>
 
-          <LayersControl.Overlay checked name="Rivers">
-            {renderRivers()}
-          </LayersControl.Overlay>
-        </LayersControl>
+            <LayersControl.Overlay checked name="Rivers">
+              {renderRivers()}
+            </LayersControl.Overlay>
+          </LayersControl>
 
-        <StateZoom selectedState={selectedState} />
-      </MapContainer>
+          <StateZoom selectedState={selectedState} />
+        </MapContainer>
 
-      <div style={{ padding: '8px 12px' }}>
-        <strong>Legend — Rapid classes</strong>
-        <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
-          <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['I'], marginRight: 8 }}></span>Class I (green)</li>
-          <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['II'], marginRight: 8 }}></span>Class II (blue)</li>
-          <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['III'], marginRight: 8 }}></span>Class III (purple)</li>
-          <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['IV'], marginRight: 8 }}></span>Class IV (red)</li>
-          <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['V'], marginRight: 8 }}></span>Class V (black)</li>
-        </ul>
+        <div style={{ padding: '8px 12px', position: 'absolute', bottom: 0, left: 0, zIndex: 500, backgroundColor: 'white', borderRadius: '4px', margin: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <strong>Legend — Rapid classes</strong>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
+            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['I'], marginRight: 8 }}></span>Class I (green)</li>
+            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['II'], marginRight: 8 }}></span>Class II (blue)</li>
+            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['III'], marginRight: 8 }}></span>Class III (purple)</li>
+            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['IV'], marginRight: 8 }}></span>Class IV (red)</li>
+            <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['V'], marginRight: 8 }}></span>Class V (black)</li>
+          </ul>
+        </div>
       </div>
 
       {selectedState && (
