@@ -209,6 +209,7 @@ export const rivers = [
     ]
   },
   {
+    name: 'Granite Creek',
     state: 'WY',
     grade: 'III',
     usgs_gage: '13012400',
