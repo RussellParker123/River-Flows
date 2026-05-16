@@ -388,7 +388,11 @@ function App() {
                 })}
                 eventHandlers={{
                   mouseover: () => setHoveredRiver(river.name),
-                  mouseout: () => setHoveredRiver(null)
+                  mouseout: () => setHoveredRiver(null),
+                  click: () => {
+                    setSelectedRiver(river.name);
+                    setHighlightedRiver(river.name);
+                  }
                 }}
               >
                 <Popup>
@@ -435,7 +439,11 @@ function App() {
               }}
               eventHandlers={{
                 mouseover: () => setHoveredRiver(river.name),
-                mouseout: () => setHoveredRiver(null)
+                mouseout: () => setHoveredRiver(null),
+                click: () => {
+                  setSelectedRiver(river.name);
+                  setHighlightedRiver(river.name);
+                }
               }}
             />
           );
@@ -451,7 +459,11 @@ function App() {
               }}
               eventHandlers={{
                 mouseover: () => setHoveredRiver(river.name),
-                mouseout: () => setHoveredRiver(null)
+                mouseout: () => setHoveredRiver(null),
+                click: () => {
+                  setSelectedRiver(river.name);
+                  setHighlightedRiver(river.name);
+                }
               }}
             >
               <Popup>
@@ -661,9 +673,9 @@ function App() {
         </div>
 
         {/* Mobile info toggle button */}
-        {isMobile && selectedState && (
+        {isMobile && selectedRiver && (
           <button
-            onClick={() => setSelectedState(null)}
+            onClick={() => setSelectedRiver(null)}
             style={{
               position: 'absolute',
               bottom: '10px',
@@ -679,35 +691,73 @@ function App() {
               fontSize: '0.9em'
             }}
           >
-            ▲ Hide Info
-          </button>
-        )}
-
-        {/* Mobile info toggle button - show */}
-        {isMobile && !selectedState && (
-          <button
-            onClick={() => selectedState ? setSelectedState(null) : setSelectedState(selectedState)}
-            style={{
-              position: 'absolute',
-              bottom: '10px',
-              right: '10px',
-              zIndex: 600,
-              padding: '10px 15px',
-              backgroundColor: '#8e44ad',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '0.9em'
-            }}
-          >
-            🔍 Select State
+            ✕ Close
           </button>
         )}
       </div>
 
-      {/* SIDEBAR - RIGHT SIDE on desktop, BOTTOM overlay on mobile */}
+      {/* MOBILE SIDE PANEL - Slides in from right when river selected */}
+      {isMobile && selectedRiver && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1001,
+          backgroundColor: '#fff',
+          borderTop: '3px solid #8e44ad',
+          maxHeight: '60vh',
+          overflow: 'auto',
+          animation: 'slideUp 0.3s ease',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.2)'
+        }}>
+          <style>{`
+            @keyframes slideUp {
+              from {
+                transform: translateY(100%);
+              }
+              to {
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+          
+          <div style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, color: gradeColors[rivers.find(r => r.name === selectedRiver)?.grade || 'III'], fontSize: '1.3em' }}>
+                {selectedRiver}
+              </h2>
+              <button
+                onClick={() => setSelectedRiver(null)}
+                style={{
+                  backgroundColor: '#ff6b6b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div style={{ padding: '15px' }}>
+            {rivers.find(r => r.name === selectedRiver) && (
+              <FlowChart 
+                river={rivers.find(r => r.name === selectedRiver)} 
+                currentFlow={flows[selectedRiver]}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DESKTOP SIDEBAR - RIGHT SIDE */}
       {selectedState && !isMobile && (
         <div style={{ 
           flex: 1, 
