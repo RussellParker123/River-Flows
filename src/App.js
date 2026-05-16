@@ -506,6 +506,30 @@ function App() {
   }, [selectedState]);
 
   useEffect(() => {
+    if (selectedState !== 'WY') return;
+    
+    // Fetch AWW flows as fallback for Wyoming rivers
+    fetch('/api/aww-flows')
+      .then(res => res.json())
+      .then(awwFlows => {
+        // For each river, if no USGS data, use AWW data
+        rivers
+          .filter(r => r.state === 'WY')
+          .forEach(river => {
+            // Check if we already have USGS data
+            if (flows[river.name] === undefined) {
+              // Try to match with AWW data
+              const awwFlow = awwFlows[river.name];
+              if (awwFlow) {
+                setFlows(f => ({ ...f, [river.name]: awwFlow }));
+              }
+            }
+          });
+      })
+      .catch(err => console.error('Error fetching AWW flows:', err));
+  }, [selectedState, flows]);
+
+  useEffect(() => {
     if (selectedState) {
       setShowLegend(true);
       const timer = setTimeout(() => setShowLegend(false), 5000);
