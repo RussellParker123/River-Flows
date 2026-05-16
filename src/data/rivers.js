@@ -275,7 +275,38 @@ export const rivers = [
     ]
   },
   {
-    name: 'Granite Creek',
+    name: 'Snake River - Jackson Dam to Pacific Creek',
+    state: 'WY',
+    grade: 'I',
+    usgs_gage: '13010050',
+    forum_url: 'https://www.mountainbuzz.com/forums/forumdisplay.php?f=85',
+    geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone; Quaternary lava flows',
+    fish_species: 'Cutthroat trout, brown trout, mountain whitefish, sculpin',
+    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    description: 'Jackson Dam to Pacific Creek - Scenic Class I Float. Perfect for beginners and families. Gentle current with beautiful views of Jackson Lake and the Teton Range.',
+    usgs_data: {
+      current_flow: null,
+      record_high: 36300,
+      record_low: 560,
+      yearly_average: 9280
+    },
+    segments: [
+      {
+        name: 'Jackson Lake Scenic Float',
+        grade: 'I',
+        coordinates: [
+          [-110.5881179, 43.857862],
+          [-110.5800, 43.8570],
+          [-110.5700, 43.8560],
+          [-110.5600, 43.8550],
+          [-110.5500, 43.8500],
+          [-110.5300, 43.8475],
+          [-110.5182376, 43.8458057]
+        ]
+      }
+    ]
+  },
+  {
     state: 'WY',
     grade: 'III',
     usgs_gage: '13012400',
