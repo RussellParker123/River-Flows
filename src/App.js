@@ -714,7 +714,7 @@ function App() {
           WebkitOverflowScrolling: 'touch',
           padding: '10px'
         }}>
-          {filteredRivers.map((river) => (
+          {rivers.filter(r => r.state === selectedState).map((river) => (
             <div
               key={river.name}
               style={{
