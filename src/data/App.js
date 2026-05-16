@@ -506,39 +506,97 @@ function App() {
   const isMobile = window.innerWidth < 768;
 
   return (
-    <div className="App" style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', overflow: 'hidden' }}>
-      <button
-        onClick={() => {
-          setView('home');
-          setSelectedState(null);
-        }}
-        style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          zIndex: 1000,
-          padding: '10px 15px',
-          backgroundColor: '#8e44ad',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          fontSize: isMobile ? '0.9em' : '1em'
-        }}
-      >
-        ← Back
-      </button>
+    <div className="App" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      {/* HEADER - Only on mobile */}
+      {isMobile && (
+        <div style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          zIndex: 999, 
+          backgroundColor: '#fff', 
+          borderBottom: '2px solid #ddd',
+          padding: '10px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <button
+            onClick={() => {
+              setView('home');
+              setSelectedState(null);
+            }}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#8e44ad',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '0.9em'
+            }}
+          >
+            ← Back
+          </button>
+          <h1 style={{ margin: 0, fontSize: '1.2em', color: '#333' }}>River Flows</h1>
+          <div style={{ width: '60px' }}></div>
+        </div>
+      )}
 
-      <h1 style={{ 
-        paddingTop: isMobile ? '50px' : '20px',
-        paddingBottom: '10px',
-        margin: '0',
-        fontSize: isMobile ? '1.3em' : '2em',
-        textAlign: 'center'
-      }}>River Flows</h1>
-      
-      <div style={{ flex: 1, width: '100%', overflow: 'hidden', position: 'relative' }}>
+      {/* MAP - LEFT SIDE on desktop, FULL on mobile */}
+      <div style={{ 
+        flex: isMobile ? 1 : 2, 
+        width: '100%', 
+        height: isMobile ? 'calc(100vh - 50px)' : '100%', 
+        overflow: 'hidden', 
+        position: 'relative',
+        marginTop: isMobile ? '50px' : 0
+      }}>
+        {/* Back button - desktop only */}
+        {!isMobile && (
+          <button
+            onClick={() => {
+              setView('home');
+              setSelectedState(null);
+            }}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              left: '10px',
+              zIndex: 1000,
+              padding: '10px 15px',
+              backgroundColor: '#8e44ad',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1em'
+            }}
+          >
+            ← Back
+          </button>
+        )}
+
+        {/* Map Header - desktop only */}
+        {!isMobile && (
+          <h1 style={{ 
+            position: 'absolute',
+            top: '50px',
+            left: '10px',
+            right: '10px',
+            margin: 0,
+            fontSize: '1.8em',
+            color: '#333',
+            zIndex: 800,
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            padding: '10px',
+            borderRadius: '6px'
+          }}>🏞️ River Flows</h1>
+        )}
+        
         <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ width: '100%', height: '100%' }}>
           <LayersControl position="topright">
             <LayersControl.BaseLayer checked name="OpenStreetMap">
@@ -579,7 +637,19 @@ function App() {
           <StateZoom selectedState={selectedState} />
         </MapContainer>
 
-        <div style={{ padding: '8px 12px', position: 'absolute', bottom: 0, left: 0, zIndex: 500, backgroundColor: 'white', borderRadius: '4px', margin: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        {/* Legend */}
+        <div style={{ 
+          padding: '8px 12px', 
+          position: 'absolute', 
+          bottom: isMobile ? 50 : 0, 
+          left: 0, 
+          zIndex: 500, 
+          backgroundColor: 'white', 
+          borderRadius: '4px', 
+          margin: '8px', 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          fontSize: isMobile ? '0.85em' : '0.95em'
+        }}>
           <strong>Legend — Rapid classes</strong>
           <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
             <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['I'], marginRight: 8 }}></span>Class I (green)</li>
@@ -589,14 +659,70 @@ function App() {
             <li><span style={{ display: 'inline-block', width: 16, height: 12, background: gradeColors['V'], marginRight: 8 }}></span>Class V (black)</li>
           </ul>
         </div>
+
+        {/* Mobile info toggle button */}
+        {isMobile && selectedState && (
+          <button
+            onClick={() => setSelectedState(null)}
+            style={{
+              position: 'absolute',
+              bottom: '10px',
+              right: '10px',
+              zIndex: 600,
+              padding: '10px 15px',
+              backgroundColor: '#ff8c00',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '0.9em'
+            }}
+          >
+            ▲ Hide Info
+          </button>
+        )}
+
+        {/* Mobile info toggle button - show */}
+        {isMobile && !selectedState && (
+          <button
+            onClick={() => selectedState ? setSelectedState(null) : setSelectedState(selectedState)}
+            style={{
+              position: 'absolute',
+              bottom: '10px',
+              right: '10px',
+              zIndex: 600,
+              padding: '10px 15px',
+              backgroundColor: '#8e44ad',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '0.9em'
+            }}
+          >
+            🔍 Select State
+          </button>
+        )}
       </div>
 
-      {selectedState && (
-        <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-          <h2>Selected State: {selectedState}</h2>
-          <h3>Major Rivers</h3>
+      {/* SIDEBAR - RIGHT SIDE on desktop, BOTTOM overlay on mobile */}
+      {selectedState && !isMobile && (
+        <div style={{ 
+          flex: 1, 
+          width: '100%',
+          height: '100%',
+          overflow: 'auto',
+          backgroundColor: '#f9f9f9',
+          borderLeft: '2px solid #ddd',
+          padding: '20px',
+          boxSizing: 'border-box'
+        }}>
+          <h2 style={{ marginTop: 0, color: '#333' }}>🗺️ {selectedState}</h2>
+          <h3 style={{ color: '#666', marginBottom: '15px' }}>Major Rivers</h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
             {rivers.filter(r => r.state === selectedState).map(river => (
               <div 
                 key={river.name} 
