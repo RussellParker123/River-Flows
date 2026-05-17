@@ -38,13 +38,33 @@ function StateZoom({ selectedState }) {
   const map = useMap();
   
   useEffect(() => {
-    if (selectedState && STATE_BOUNDS[selectedState]) {
-      const bounds = STATE_BOUNDS[selectedState];
-      // Use a small timeout to ensure map is ready
-      setTimeout(() => {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 8 });
-      }, 100);
-    }
+    if (!selectedState) return;
+    
+    // Find the state in the GeoJSON data and calculate its bounds
+    const stateFeature = usStates.features.find(f => f.properties.name === selectedState);
+    if (!stateFeature) return;
+    
+    const coordinates = stateFeature.geometry.coordinates[0];
+    if (!coordinates || coordinates.length === 0) return;
+    
+    // Calculate bounds from coordinates [lng, lat]
+    let minLat = coordinates[0][1];
+    let maxLat = coordinates[0][1];
+    let minLng = coordinates[0][0];
+    let maxLng = coordinates[0][0];
+    
+    coordinates.forEach(([lng, lat]) => {
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+    });
+    
+    // Fit map to state bounds with padding
+    const bounds = [[minLat, minLng], [maxLat, maxLng]];
+    setTimeout(() => {
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 8 });
+    }, 100);
   }, [selectedState, map]);
   
   return null;
