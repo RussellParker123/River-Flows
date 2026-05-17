@@ -83,7 +83,7 @@ function HomePage({ onNavigateToMap }) {
       padding: isMobile ? '20px' : '40px', 
       maxWidth: '1200px', 
       margin: '0 auto',
-      backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.9) 0%, rgba(142, 68, 173, 0.85) 100%), url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=800&fit=crop")',
+      backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.85) 0%, rgba(142, 68, 173, 0.8) 100%), url("https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=1200&h=800&fit=crop")',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
