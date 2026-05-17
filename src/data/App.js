@@ -79,11 +79,22 @@ function HomePage({ onNavigateToMap }) {
   }, []);
 
   return (
-    <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', fontSize: isMobile ? '1.8em' : '2.5em', marginBottom: '10px' }}>
+    <div style={{ 
+      padding: isMobile ? '20px' : '40px', 
+      maxWidth: '1200px', 
+      margin: '0 auto',
+      backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.9) 0%, rgba(142, 68, 173, 0.85) 100%), url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=800&fit=crop")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      borderRadius: '12px',
+      minHeight: '100vh',
+      position: 'relative'
+    }}>
+      <h1 style={{ textAlign: 'center', fontSize: isMobile ? '1.8em' : '2.5em', marginBottom: '10px', color: '#fff', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
         🏞️ River Flows
       </h1>
-      <p style={{ textAlign: 'center', fontSize: isMobile ? '0.95em' : '1.1em', color: '#666', marginBottom: isMobile ? '20px' : '40px' }}>
+      <p style={{ textAlign: 'center', fontSize: isMobile ? '0.95em' : '1.1em', color: '#e0e0e0', marginBottom: isMobile ? '20px' : '40px', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
         Real-time water flow data for your next adventure
       </p>
 
@@ -101,22 +112,23 @@ function HomePage({ onNavigateToMap }) {
               border: `3px solid ${gradeColors[river.grade]}`,
               borderRadius: '12px',
               padding: '20px',
-              backgroundColor: '#f9f9f9',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              backgroundColor: 'rgba(249, 249, 249, 0.95)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
               cursor: 'pointer',
               transition: 'transform 0.2s, boxShadow 0.2s',
               ':hover': {
                 transform: 'translateY(-5px)',
-                boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                boxShadow: '0 8px 16px rgba(0,0,0,0.3)'
               }
             }}
             onMouseEnter={e => {
               e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+              e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
             }}
             onClick={() => onNavigateToMap(river.state)}
           >
