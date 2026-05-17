@@ -98,6 +98,62 @@ function HomePage({ onNavigateToMap }) {
         Real-time water flow data for your next adventure
       </p>
 
+      {/* Interactive State Selection Map */}
+      <div style={{ 
+        marginBottom: '40px', 
+        borderRadius: '12px', 
+        overflow: 'hidden',
+        boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+        height: isMobile ? '400px' : '500px'
+      }}>
+        <MapContainer center={[44, -110]} zoom={4} style={{ width: '100%', height: '100%' }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; OpenStreetMap contributors"
+          />
+          <GeoJSON 
+            data={usStates}
+            style={(feature) => ({
+              color: '#333',
+              weight: 2,
+              opacity: 0.8,
+              fillColor: '#8e44ad',
+              fillOpacity: 0.4,
+              cursor: 'pointer'
+            })}
+            onEachFeature={(feature, layer) => {
+              layer.on('click', () => {
+                onNavigateToMap(feature.properties.name);
+              });
+              layer.on('mouseover', () => {
+                layer.setStyle({
+                  fillOpacity: 0.7,
+                  weight: 3,
+                  color: '#ff8c00'
+                });
+                layer.bindPopup(`<strong>${feature.properties.name}</strong><br/>Click to explore rivers`, { 
+                  closeButton: false 
+                }).openPopup();
+              });
+              layer.on('mouseout', () => {
+                layer.setStyle({
+                  fillOpacity: 0.4,
+                  weight: 2,
+                  color: '#333'
+                });
+                layer.closePopup();
+              });
+            }}
+          />
+        </MapContainer>
+      </div>
+
+      <p style={{ textAlign: 'center', color: '#e0e0e0', marginBottom: '40px', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+        👆 Click on a state to explore rivers and view real-time flow data
+      </p>
+
+      {/* Alternative: Show River Cards Grid Below */}
+      <h2 style={{ textAlign: 'center', color: '#fff', marginBottom: '30px', textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>Featured Rivers by Grade</h2>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? '15px' : '20px' }}>
         {rivers
           .sort((a, b) => {
