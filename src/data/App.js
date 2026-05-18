@@ -448,6 +448,40 @@ function FlowChart({ river, currentFlow, segment }) {
         <p style={{ margin: '5px 0' }}><strong>Record High:</strong> {Math.round(river.usgs_data.record_high)} CFS</p>
         <p style={{ margin: '5px 0' }}><strong>Record Low:</strong> {Math.round(river.usgs_data.record_low)} CFS</p>
       </div>
+
+      <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+        <button
+          onClick={() => {
+            if (segment?.coordinates && segment.coordinates.length > 0) {
+              const startCoord = segment.coordinates[0];
+              const endCoord = segment.coordinates[segment.coordinates.length - 1];
+              const mapsUrl = `https://www.google.com/maps/dir/${startCoord[1]},${startCoord[0]}/${endCoord[1]},${endCoord[0]}`;
+              window.open(mapsUrl, '_blank');
+            } else if (river.segments && river.segments[0]?.coordinates) {
+              const coords = river.segments[0].coordinates;
+              const startCoord = coords[0];
+              const endCoord = coords[coords.length - 1];
+              const mapsUrl = `https://www.google.com/maps/dir/${startCoord[1]},${startCoord[0]}/${endCoord[1]},${endCoord[0]}`;
+              window.open(mapsUrl, '_blank');
+            }
+          }}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4285F4',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: isMobile ? '0.9em' : '1em',
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#357ae8'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4285F4'}
+        >
+          🗺️ Get Directions
+        </button>
+      </div>
     </div>
   );
 }
