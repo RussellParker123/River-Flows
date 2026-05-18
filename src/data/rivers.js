@@ -233,7 +233,7 @@ export const rivers = [
     forum_url: 'https://www.americanwhitewater.org',
     geology: 'Precambrian granite; Paleozoic limestone and sandstone; Mesozoic shale',
     fish_species: 'Brown trout, cutthroat trout',
-    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    youtube_url: 'https://www.youtube.com/embed/7OPVRIim-0g',
     description: 'Granite Falls to Hoback River - Short, Sweet Spring Run. Season: Runoff, May to July. Class: III-. Gauge: None (visual assessment). Length: 4.5 miles. Shuttle: 4.5 miles, easy to bike or run with two cars.',
     usgs_data: {
       current_flow: null,
