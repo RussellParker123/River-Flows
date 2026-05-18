@@ -996,8 +996,8 @@ function App() {
         )}
       </div>
 
-      {/* MOBILE RIVER LIST - Shows below map */}
-      {isMobile && selectedState && (
+      {/* MOBILE RIVER LIST - Shows below map (hidden when side panel open) */}
+      {isMobile && selectedState && !selectedRiver && (
         <div style={{
           flex: '1 1 60%',
           width: '100%',
@@ -1131,7 +1131,7 @@ function App() {
           bottom: 0,
           left: 0,
           right: 0,
-          top: '50px',
+          top: 0,
           zIndex: 1001,
           backgroundColor: '#fff',
           borderTop: '3px solid #8e44ad',
@@ -1161,7 +1161,8 @@ function App() {
             zIndex: 10,
             display: 'flex', 
             justifyContent: 'space-between', 
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingTop: '20px'
           }}>
             <h2 style={{ 
               margin: 0, 
