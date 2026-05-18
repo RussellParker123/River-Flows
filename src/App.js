@@ -335,7 +335,7 @@ function FlowChart({ river, currentFlow, segment }) {
     <div style={{ marginTop: '30px', padding: isMobile ? '15px' : '20px', backgroundColor: '#f5f5f5', borderRadius: '12px', marginBottom: isMobile ? '20px' : '0' }}>
       <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}</h3>
       
-      {youtubeUrl && youtubeUrl !== 'https://www.youtube.com/embed/placeholder' && (
+      {youtubeUrl && !youtubeUrl.includes('placeholder') && (
         <div style={{ marginBottom: '30px', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
             <iframe
