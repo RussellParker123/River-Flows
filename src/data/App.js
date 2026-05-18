@@ -291,10 +291,13 @@ function HomePage({ onNavigateToMap }) {
   );
 }
 
-function FlowChart({ river, currentFlow }) {
+function FlowChart({ river, currentFlow, segment }) {
   const [historicalData, setHistoricalData] = useState([]);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
   const isMobile = window.innerWidth < 768;
+  
+  // Use segment's youtube_url if available, otherwise use river's youtube_url
+  const youtubeUrl = segment?.youtube_url || river.youtube_url;
 
   useEffect(() => {
     if (river.usgs_gage) {
@@ -332,7 +335,7 @@ function FlowChart({ river, currentFlow }) {
     <div style={{ marginTop: '30px', padding: isMobile ? '15px' : '20px', backgroundColor: '#f5f5f5', borderRadius: '12px', marginBottom: isMobile ? '20px' : '0' }}>
       <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}</h3>
       
-      {river.youtube_url && river.youtube_url !== 'https://www.youtube.com/embed/placeholder' && (
+      {youtubeUrl && youtubeUrl !== 'https://www.youtube.com/embed/placeholder' && (
         <div style={{ marginBottom: '30px', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
             <iframe
@@ -344,14 +347,14 @@ function FlowChart({ river, currentFlow }) {
                 height: '100%',
                 border: 'none'
               }}
-              src={`${river.youtube_url}?autoplay=1&mute=1`}
-              title={`${river.name} Kayaking Video`}
+              src={`${youtubeUrl}?autoplay=1&mute=1`}
+              title={`${segment?.name || river.name} Kayaking Video`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
           </div>
           <p style={{ margin: '10px', color: '#666', fontSize: '0.9em' }}>
-            ▶️ Kayaking on {river.name} • {river.state}
+            ▶️ Kayaking on {segment?.name || river.name} • {river.state}
           </p>
         </div>
       )}
@@ -454,6 +457,7 @@ function App() {
   const [flows, setFlows] = useState({});
   const [view, setView] = useState('home'); // 'home' or 'map'
   const [selectedRiver, setSelectedRiver] = useState(null);
+  const [selectedSegment, setSelectedSegment] = useState(null);
   const [hoveredRiver, setHoveredRiver] = useState(null);
   const [highlightedRiver, setHighlightedRiver] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
@@ -545,6 +549,7 @@ function App() {
                   mouseout: () => setHoveredRiver(null),
                   click: () => {
                     setSelectedRiver(river.name);
+                    setSelectedSegment(seg);
                     setHighlightedRiver(river.name);
                   }
                 }}
@@ -596,6 +601,7 @@ function App() {
                 mouseout: () => setHoveredRiver(null),
                 click: () => {
                   setSelectedRiver(river.name);
+                  setSelectedSegment(seg);
                   setHighlightedRiver(river.name);
                 }
               }}
@@ -616,6 +622,7 @@ function App() {
                 mouseout: () => setHoveredRiver(null),
                 click: () => {
                   setSelectedRiver(river.name);
+                  setSelectedSegment(seg);
                   setHighlightedRiver(river.name);
                 }
               }}
@@ -1058,7 +1065,7 @@ function App() {
                   <p style={{ margin: '8px 0', fontSize: '0.9em', color: '#555' }}>
                     {river.description}
                   </p>
-                  <FlowChart river={river} currentFlow={flows[river.name]} />
+                  <FlowChart river={river} currentFlow={flows[river.name]} segment={selectedSegment} />
                   <CommentsSection riverName={river.name} riverState={river.state} />
                 </div>
               )}
@@ -1142,6 +1149,7 @@ function App() {
               <FlowChart 
                 river={rivers.find(r => r.name === selectedRiver)} 
                 currentFlow={flows[selectedRiver]}
+                segment={selectedSegment}
               />
             )}
           </div>
@@ -1272,7 +1280,7 @@ function App() {
                 
                 {selectedRiver === river.name && (
                   <>
-                    <FlowChart river={river} currentFlow={flows[river.name]} />
+                    <FlowChart river={river} currentFlow={flows[river.name]} segment={selectedSegment} />
                     <CommentsSection riverName={river.name} riverState={river.state} />
                   </>
                 )}

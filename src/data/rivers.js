@@ -19,6 +19,7 @@ export const rivers = [
       {
         name: 'Dead Mans to Moose',
         grade: 'I',
+        youtube_url: 'https://www.youtube.com/embed/aOhMKO6Otas',
         coordinates: [
           [-110.6272649, 43.7609535],
           [-110.6300, 43.7550],
@@ -56,6 +57,7 @@ export const rivers = [
       {
         name: 'Snake River Canyon',
         grade: 'III',
+        youtube_url: 'https://www.youtube.com/embed/x8wj2hFZrOU',
         coordinates: [
           [-110.821828, 43.2045618],
           [-110.8247595, 43.2025498],
@@ -132,6 +134,7 @@ export const rivers = [
       {
         name: 'South Park to Astoria',
         grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/RNgiqkTf3kI',
         coordinates: [
           [-110.7445676, 43.3855774],
           [-110.7414024, 43.3833511],
@@ -196,6 +199,7 @@ export const rivers = [
       {
         name: 'Jackson Lake Scenic Float',
         grade: 'I',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
         coordinates: [
           [-110.5881179, 43.857862],
           [-110.5800, 43.8570],
