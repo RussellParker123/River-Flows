@@ -1031,7 +1031,18 @@ function App() {
                 </button>
 
                 <button
-                  onClick={() => setSelectedRiver(selectedRiver === river.name ? null : river.name)}
+                  onClick={() => {
+                    if (selectedRiver === river.name) {
+                      setSelectedRiver(null);
+                      setSelectedSegment(null);
+                    } else {
+                      setSelectedRiver(river.name);
+                      // Set segment to the first segment of this river
+                      if (river.segments && river.segments.length > 0) {
+                        setSelectedSegment(river.segments[0]);
+                      }
+                    }
+                  }}
                   style={{
                     padding: '6px 12px',
                     backgroundColor: '#666',
