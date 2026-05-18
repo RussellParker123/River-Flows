@@ -70,7 +70,7 @@ export const rivers = [
       {
         name: 'Snake River Canyon',
         grade: 'III',
-        youtube_url: 'https://www.youtube.com/embed/x8wj2hFZrOU',
+        youtube_url: 'https://www.youtube.com/embed/aOhMKO6Otas',
         coordinates: [
           [-110.821828, 43.2045618],
           [-110.8247595, 43.2025498],
