@@ -147,7 +147,7 @@ export const rivers = [
       {
         name: 'South Park to Astoria',
         grade: 'II',
-        youtube_url: 'https://www.youtube.com/embed/RNgiqkTf3kI',
+        youtube_url: 'https://www.youtube.com/embed/oOht4znUiqk',
         coordinates: [
           [-110.7445676, 43.3855774],
           [-110.7414024, 43.3833511],
@@ -212,7 +212,7 @@ export const rivers = [
       {
         name: 'Jackson Lake Scenic Float',
         grade: 'I',
-        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        youtube_url: 'https://www.youtube.com/embed/hDDUEmnD8Js',
         coordinates: [
           [-110.5881179, 43.857862],
           [-110.5800, 43.8570],
@@ -245,7 +245,7 @@ export const rivers = [
       {
         name: 'Upper Granite Falls',
         grade: 'III',
-        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        youtube_url: 'https://www.youtube.com/embed/7OPVRIim-0g',
         coordinates: [
           [-110.4438938, 43.3650619],
           [-110.4441908, 43.3646347],
