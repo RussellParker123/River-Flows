@@ -70,6 +70,47 @@ function StateZoom({ selectedState }) {
   return null;
 }
 
+function UserLocationMarker({ userLocation }) {
+  if (!userLocation) return null;
+  
+  return (
+    <Marker
+      position={[userLocation.latitude, userLocation.longitude]}
+      icon={L.divIcon({
+        className: 'user-location-marker',
+        html: `<div style="
+          width: 30px;
+          height: 30px;
+          background-color: #007bff;
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+          "></div>
+        </div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15]
+      })}
+    >
+      <Popup>
+        <strong>📍 Your Location</strong><br />
+        Lat: {userLocation.latitude.toFixed(4)}<br />
+        Lng: {userLocation.longitude.toFixed(4)}<br />
+        Accuracy: {Math.round(userLocation.accuracy)}m
+      </Popup>
+    </Marker>
+  );
+}
+
 function HomePage({ onNavigateToMap }) {
   const [flows, setFlows] = useState({});
   const [loading, setLoading] = useState(true);
@@ -423,7 +464,38 @@ function App() {
   const [hoveredRiver, setHoveredRiver] = useState(null);
   const [highlightedRiver, setHighlightedRiver] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [showUserLocation, setShowUserLocation] = useState(false);
+  const [locationError, setLocationError] = useState(null);
   const geoJsonRef = useRef();
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        setUserLocation({ latitude, longitude, accuracy });
+        setShowUserLocation(true);
+      },
+      (error) => {
+        let errorMsg = 'Unable to retrieve your location';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = 'Location permission denied. Enable in browser settings.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMsg = 'Location information unavailable.';
+        } else if (error.code === error.TIMEOUT) {
+          errorMsg = 'Location request timed out.';
+        }
+        setLocationError(errorMsg);
+        console.error('Geolocation error:', error);
+      }
+    );
+  };
 
   const onEachState = (feature, layer) => {
     layer.on({
@@ -625,6 +697,30 @@ function App() {
     }
   }, [selectedState]);
 
+  useEffect(() => {
+    if (!showUserLocation || !navigator.geolocation) return;
+    
+    // Watch user location for real-time updates
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        setUserLocation({ latitude, longitude, accuracy });
+        setLocationError(null);
+      },
+      (error) => {
+        console.error('Location watch error:', error);
+        // Don't show error for watch, only for initial request
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+    
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [showUserLocation]);
+
   if (view === 'home') {
     return (
       <div className="App">
@@ -682,7 +778,53 @@ function App() {
             ← Back
           </button>
           <h1 style={{ margin: 0, fontSize: '1.2em', color: '#333', flex: 1, textAlign: 'center' }}>River Flows</h1>
-          <div style={{ width: '70px' }}></div>
+          <button
+            onClick={() => {
+              if (showUserLocation) {
+                setShowUserLocation(false);
+                setUserLocation(null);
+              } else {
+                requestLocation();
+              }
+            }}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: showUserLocation ? '#e74c3c' : '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.85em',
+              fontWeight: 'bold',
+              minWidth: '70px',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = showUserLocation ? '#c0392b' : '#0056b3'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = showUserLocation ? '#e74c3c' : '#007bff'}
+            onTouchStart={(e) => e.currentTarget.style.opacity = '0.7'}
+            onTouchEnd={(e) => e.currentTarget.style.opacity = '1'}
+          >
+            {showUserLocation ? '📍 Hide' : '📍 Locate'}
+          </button>
+        </div>
+      )}
+
+      {/* Show location error if any */}
+      {locationError && view !== 'home' && (
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '60px' : '10px',
+          left: '10px',
+          right: isMobile ? '10px' : 'auto',
+          backgroundColor: '#e74c3c',
+          color: 'white',
+          padding: '10px 15px',
+          borderRadius: '6px',
+          fontSize: '0.9em',
+          zIndex: 900,
+          maxWidth: isMobile ? 'auto' : '300px'
+        }}>
+          ⚠️ {locationError}
         </div>
       )}
 
@@ -773,6 +915,10 @@ function App() {
 
             <LayersControl.Overlay checked name="Rivers">
               {renderRivers()}
+            </LayersControl.Overlay>
+
+            <LayersControl.Overlay checked={showUserLocation} name="Your Location">
+              {showUserLocation && <UserLocationMarker userLocation={userLocation} />}
             </LayersControl.Overlay>
           </LayersControl>
 
