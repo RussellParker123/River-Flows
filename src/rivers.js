@@ -32,7 +32,7 @@ export const rivers = [
       {
         name: 'Dead Mans to Moose',
         grade: 'I',
-        youtube_url: 'https://www.youtube.com/embed/aOhMKO6Otas',
+        youtube_url: 'https://www.youtube.com/embed/TEaYxoJMMV4',
         coordinates: [
           [-110.6272649, 43.7609535],
           [-110.6300, 43.7550],
