@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 
 export function CommentsSection({ riverName, riverState }) {
@@ -10,6 +10,26 @@ export function CommentsSection({ riverName, riverState }) {
   const [videoUrl, setVideoUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+
+  // Fetch comments function with useCallback to avoid dependency issues
+  const fetchComments = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('river_name', riverName)
+        .eq('river_state', riverState)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [riverName, riverState]);
 
   // Fetch comments on mount
   useEffect(() => {
@@ -39,26 +59,7 @@ export function CommentsSection({ riverName, riverState }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [riverName, riverState]);
-
-  const fetchComments = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('river_name', riverName)
-        .eq('river_state', riverState)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setComments(data || []);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [riverName, riverState, fetchComments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
