@@ -1146,11 +1146,14 @@ function App() {
 
           <div style={{ padding: '15px', paddingBottom: '80px' }}>
             {rivers.find(r => r.name === selectedRiver) && (
-              <FlowChart 
-                river={rivers.find(r => r.name === selectedRiver)} 
-                currentFlow={flows[selectedRiver]}
-                segment={selectedSegment}
-              />
+              <>
+                <FlowChart 
+                  river={rivers.find(r => r.name === selectedRiver)} 
+                  currentFlow={flows[selectedRiver]}
+                  segment={selectedSegment}
+                />
+                <CommentsSection riverName={selectedRiver} riverState={rivers.find(r => r.name === selectedRiver)?.state} />
+              </>
             )}
           </div>
         </div>
