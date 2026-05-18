@@ -2,7 +2,7 @@ import './App.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, useMap, Polyline, Marker, Popup, LayersControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import usStates from './us-states.json';
 import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
@@ -510,7 +510,23 @@ function App() {
     fillOpacity: 0.2,
   };
 
-  const renderRivers = () => {
+  // Memoize click handlers to prevent unnecessary re-renders
+  const handleRiverClick = useCallback((river, seg) => {
+    setSelectedRiver(river.name);
+    setSelectedSegment(seg);
+    setHighlightedRiver(river.name);
+  }, []);
+
+  const handleRiverHover = useCallback((riverName) => {
+    setHoveredRiver(riverName);
+  }, []);
+
+  const handleRiverLeave = useCallback(() => {
+    setHoveredRiver(null);
+  }, []);
+
+  // Memoize the rivers rendering to prevent recalculation on every render
+  const renderedRivers = useMemo(() => {
     return rivers
       .filter(r => !selectedState || r.state === selectedState)
       .flatMap(river => {
@@ -545,13 +561,9 @@ function App() {
                   popupAnchor: [0, -markerSize / 2]
                 })}
                 eventHandlers={{
-                  mouseover: () => setHoveredRiver(river.name),
-                  mouseout: () => setHoveredRiver(null),
-                  click: () => {
-                    setSelectedRiver(river.name);
-                    setSelectedSegment(seg);
-                    setHighlightedRiver(river.name);
-                  }
+                  mouseover: () => handleRiverHover(river.name),
+                  mouseout: handleRiverLeave,
+                  click: () => handleRiverClick(river, seg)
                 }}
               >
                 <Popup>
@@ -587,23 +599,22 @@ function App() {
           const lineWeight = isHighlighted ? 8 : isHovered ? 6 : 5;
           const lineOpacity = isHighlighted ? 1 : isHovered ? 0.9 : 0.8;
           
+          // Pre-compute transformed coordinates
+          const transformedCoords = coords.map(([lng, lat]) => [lat, lng]);
+          
           const outline = (
             <Polyline
               key={river.name + '-outline-' + i}
-              positions={coords.map(([lng, lat]) => [lat, lng])}
+              positions={transformedCoords}
               pathOptions={{ 
                 color: '#000', 
                 weight: isHighlighted ? 10 : 8, 
                 opacity: isHighlighted ? 0.5 : 0.35 
               }}
               eventHandlers={{
-                mouseover: () => setHoveredRiver(river.name),
-                mouseout: () => setHoveredRiver(null),
-                click: () => {
-                  setSelectedRiver(river.name);
-                  setSelectedSegment(seg);
-                  setHighlightedRiver(river.name);
-                }
+                mouseover: () => handleRiverHover(river.name),
+                mouseout: handleRiverLeave,
+                click: () => handleRiverClick(river, seg)
               }}
             />
           );
@@ -611,20 +622,16 @@ function App() {
           const line = (
             <Polyline
               key={river.name + '-' + seg.name + '-' + i}
-              positions={coords.map(([lng, lat]) => [lat, lng])}
+              positions={transformedCoords}
               pathOptions={{ 
                 color: gradeColors[seg.grade] || '#666', 
                 weight: lineWeight,
                 opacity: lineOpacity
               }}
               eventHandlers={{
-                mouseover: () => setHoveredRiver(river.name),
-                mouseout: () => setHoveredRiver(null),
-                click: () => {
-                  setSelectedRiver(river.name);
-                  setSelectedSegment(seg);
-                  setHighlightedRiver(river.name);
-                }
+                mouseover: () => handleRiverHover(river.name),
+                mouseout: handleRiverLeave,
+                click: () => handleRiverClick(river, seg)
               }}
             >
               <Popup>
@@ -652,7 +659,7 @@ function App() {
           return [outline, line];
         });
       });
-  };
+  }, [selectedState, highlightedRiver, hoveredRiver, flows, handleRiverClick, handleRiverHover, handleRiverLeave]);
 
   useEffect(() => {
     if (!selectedState) return;
@@ -890,7 +897,7 @@ function App() {
             </LayersControl.Overlay>
 
             <LayersControl.Overlay checked name="Rivers">
-              {renderRivers()}
+              {renderedRivers}
             </LayersControl.Overlay>
 
             <LayersControl.Overlay checked={showUserLocation} name="Your Location">
