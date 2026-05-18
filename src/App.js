@@ -1083,8 +1083,6 @@ function App() {
                   <p style={{ margin: '8px 0', fontSize: '0.9em', color: '#555' }}>
                     {river.description}
                   </p>
-                  <FlowChart river={river} currentFlow={flows[river.name]} segment={selectedSegment} />
-                  <CommentsSection riverName={river.name} riverState={river.state} />
                 </div>
               )}
             </div>
