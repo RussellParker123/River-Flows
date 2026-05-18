@@ -200,7 +200,7 @@ export const rivers = [
     forum_url: 'https://www.americanwhitewater.org',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone; Quaternary lava flows',
     fish_species: 'Cutthroat trout, brown trout, mountain whitefish, sculpin',
-    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    youtube_url: 'https://www.youtube.com/embed/hDDUEmnD8Js',
     description: 'Jackson Dam to Pacific Creek - Scenic Class I Float. Perfect for beginners and families. Gentle current with beautiful views of Jackson Lake and the Teton Range.',
     usgs_data: {
       current_flow: null,
