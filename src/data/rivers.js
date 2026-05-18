@@ -13,14 +13,14 @@
 
 export const rivers = [
   {
-    name: 'Snake River',
+    name: 'Snake River - Dead Mans to Moose',
     state: 'WY',
     grade: 'I',
     usgs_gage: '13010050',
     forum_url: 'https://www.americanwhitewater.org',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone; Quaternary lava flows',
     fish_species: 'Cutthroat trout, brown trout, mountain whitefish, sculpin',
-    youtube_url: 'https://www.youtube.com/embed/aOhMKO6Otas',
+    youtube_url: 'https://www.youtube.com/embed/TEaYxoJMMV4',
     description: 'Dead Mans to Moose - Scenic Class I Float with Route Finding. Beautiful float with some tricky navigation due to underwater obstacles. Moderate current, scenic views, requires good boat control and route finding skills.',
     usgs_data: {
       current_flow: null,
