@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import usStates from './us-states.json';
 import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
+import { CommentsSection } from './CommentsSection';
 
 // v1.5 - User location tracking + Salmon River accurate coordinates
 // Fix for default Leaflet marker icons
@@ -1058,6 +1059,7 @@ function App() {
                     {river.description}
                   </p>
                   <FlowChart river={river} currentFlow={flows[river.name]} />
+                  <CommentsSection riverName={river.name} riverState={river.state} />
                 </div>
               )}
             </div>
@@ -1269,7 +1271,10 @@ function App() {
                 )}
                 
                 {selectedRiver === river.name && (
-                  <FlowChart river={river} currentFlow={flows[river.name]} />
+                  <>
+                    <FlowChart river={river} currentFlow={flows[river.name]} />
+                    <CommentsSection riverName={river.name} riverState={river.state} />
+                  </>
                 )}
               </div>
             ))}
