@@ -8,6 +8,7 @@ import usStates from './us-states.json';
 import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
 
+// v1.5 - User location tracking + Salmon River accurate coordinates
 // Fix for default Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
