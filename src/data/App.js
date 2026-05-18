@@ -17,15 +17,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// State bounds for zoom focusing
-const STATE_BOUNDS = {
-  'CO': [[36.9956, -109.0504], [41.0023, -102.0423]],  // Southwest to Northeast bounds
-  'ID': [[42.0015, -117.2428], [49.0011, -111.0456]],
-  'MT': [[44.9968, -116.0489], [49.0033, -104.0396]],
-  'UT': [[36.9979, -114.0742], [42.0011, -109.0423]],
-  'WY': [[40.9977, -111.0566], [45.0052, -104.0519]]
-};
-
 const gradeColors = {
   'I': '#2ecc71',
   'II': '#3498db',
