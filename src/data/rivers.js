@@ -1,3 +1,16 @@
+// YouTube videos are assigned at the SEGMENT level, not river level
+// To add a video to a segment, add youtube_url: 'https://www.youtube.com/embed/VIDEO_ID' to the segment object
+// Example:
+// segments: [
+//   {
+//     name: 'Section Name',
+//     grade: 'III',
+//     youtube_url: 'https://www.youtube.com/embed/VIDEOID123',
+//     coordinates: [...]
+//   }
+// ]
+// Note: Use 'placeholder' as the video ID for segments without a video yet
+
 export const rivers = [
   {
     name: 'Snake River',
@@ -232,6 +245,7 @@ export const rivers = [
       {
         name: 'Upper Granite Falls',
         grade: 'III',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
         coordinates: [
           [-110.4438938, 43.3650619],
           [-110.4441908, 43.3646347],
