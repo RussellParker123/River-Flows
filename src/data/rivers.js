@@ -1872,7 +1872,7 @@ export const rivers = [
     state: 'MT',
     grade: 'III',
     usgs_gage: '06044500',
-    forum_url: 'https://www.americanwhitewater.org',
+    forum_url: 'https://www.americanwhitewater.org/content/River/view/river-detail/1008/main',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone',
     fish_species: 'Brown trout, cutthroat trout, rainbow trout',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
