@@ -1803,7 +1803,7 @@ export const rivers = [
     forum_url: 'https://www.americanwhitewater.org',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone; Quaternary glacial deposits',
     fish_species: 'Brown trout, cutthroat trout, rainbow trout',
-    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    youtube_url: 'https://www.youtube.com/embed/N7wzK9W5_0c',
     description: 'Upper & Lower Reaches - Mellow, scenic floats perfect for beginners, families, and fly fishing. Generally Class I-II with beautiful views near Big Sky and downstream areas.',
     usgs_data: {
       current_flow: null,
@@ -1815,7 +1815,7 @@ export const rivers = [
       {
         name: 'Upper Gallatin Float',
         grade: 'I',
-        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        youtube_url: 'https://www.youtube.com/embed/N7wzK9W5_0c',
         coordinates: [
           [-110.9503, 45.2850],
           [-110.9450, 45.2820],
