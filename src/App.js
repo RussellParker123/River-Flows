@@ -304,8 +304,7 @@ function FlowChart({ river, currentFlow, segment }) {
   
   // Reset selectedVideoIndex if it's out of bounds
   const currentVideoIndex = selectedVideoIndex < videos.length ? selectedVideoIndex : 0;
-  const videoId = videos.length > 0 && videos[currentVideoIndex]?.id ? videos[currentVideoIndex].id : null;
-  const youtubeUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : river.youtube_url;
+  const youtubeUrl = videos.length > 0 ? `https://www.youtube.com/embed/${videos[currentVideoIndex].id}` : river.youtube_url;
 
   useEffect(() => {
     // Reset video index when segment changes
@@ -348,9 +347,9 @@ function FlowChart({ river, currentFlow, segment }) {
     <div style={{ marginTop: '30px', padding: isMobile ? '15px' : '20px', backgroundColor: '#f5f5f5', borderRadius: '12px', marginBottom: isMobile ? '20px' : '0' }}>
       <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}</h3>
       
-      {youtubeUrl && !youtubeUrl.includes('placeholder') && videoId && (
+      {youtubeUrl && !youtubeUrl.includes('placeholder') && (
         <div style={{ marginBottom: '30px' }}>
-          {Array.isArray(videos) && videos.length > 1 && (
+          {videos.length > 1 && (
             <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {videos.map((video, index) => (
                 <button
