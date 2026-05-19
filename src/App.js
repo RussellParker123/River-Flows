@@ -341,7 +341,7 @@ function FlowChart({ river, currentFlow, segment }) {
       
       {youtubeUrl && !youtubeUrl.includes('placeholder') && (
         <div style={{ marginBottom: '30px' }}>
-          {videos.length > 1 && (
+          {videos && videos.length > 1 && (
             <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {videos.map((video, index) => (
                 <button
