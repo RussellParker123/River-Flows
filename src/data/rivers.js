@@ -1794,6 +1794,115 @@ export const rivers = [
         ]
       }
     ]
+  },
+  {
+    name: 'Gallatin River - Upper Reaches',
+    state: 'MT',
+    grade: 'I',
+    usgs_gage: '06044500',
+    forum_url: 'https://www.americanwhitewater.org',
+    geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone; Quaternary glacial deposits',
+    fish_species: 'Brown trout, cutthroat trout, rainbow trout',
+    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    description: 'Upper & Lower Reaches - Mellow, scenic floats perfect for beginners, families, and fly fishing. Generally Class I-II with beautiful views near Big Sky and downstream areas.',
+    usgs_data: {
+      current_flow: null,
+      record_high: 16800,
+      record_low: 320,
+      yearly_average: 2800
+    },
+    segments: [
+      {
+        name: 'Upper Gallatin Float',
+        grade: 'I',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        coordinates: [
+          [-110.9503, 45.2850],
+          [-110.9450, 45.2820],
+          [-110.9400, 45.2790],
+          [-110.9350, 45.2760],
+          [-110.9300, 45.2730],
+          [-110.9250, 45.2700],
+          [-110.9200, 45.2670],
+          [-110.9150, 45.2640],
+          [-110.9100, 45.2610],
+          [-110.9050, 45.2580]
+        ]
+      }
+    ]
+  },
+  {
+    name: 'Gallatin River - Canyon Section',
+    state: 'MT',
+    grade: 'II',
+    usgs_gage: '06044500',
+    forum_url: 'https://www.americanwhitewater.org',
+    geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone',
+    fish_species: 'Brown trout, cutthroat trout, rainbow trout',
+    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    description: 'Gallatin Canyon (Bozeman area) - Fast, continuous section with tight turns and rocky, technical maneuvering. Primarily Class II-III whitewater with stunning canyon views.',
+    usgs_data: {
+      current_flow: null,
+      record_high: 16800,
+      record_low: 320,
+      yearly_average: 2800
+    },
+    segments: [
+      {
+        name: 'Gallatin Canyon - Technical Section',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        coordinates: [
+          [-110.8800, 45.3200],
+          [-110.8750, 45.3170],
+          [-110.8700, 45.3140],
+          [-110.8650, 45.3110],
+          [-110.8600, 45.3080],
+          [-110.8550, 45.3050],
+          [-110.8500, 45.3020],
+          [-110.8450, 45.2990],
+          [-110.8400, 45.2960],
+          [-110.8350, 45.2930]
+        ]
+      }
+    ]
+  },
+  {
+    name: 'Gallatin River - Mad Mile',
+    state: 'MT',
+    grade: 'III',
+    usgs_gage: '06044500',
+    forum_url: 'https://www.americanwhitewater.org',
+    geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone',
+    fish_species: 'Brown trout, cutthroat trout, rainbow trout',
+    youtube_url: 'https://www.youtube.com/embed/placeholder',
+    description: 'The "Mad Mile" - Infamous two-mile stretch dropping nearly 100 feet per mile with intense, challenging whitewater. Class III-IV (bumps to Class IV during spring snowmelt May-June). Expert-only section requiring serious paddling skills.',
+    usgs_data: {
+      current_flow: null,
+      record_high: 16800,
+      record_low: 320,
+      yearly_average: 2800
+    },
+    segments: [
+      {
+        name: 'Mad Mile - Technical Whitewater',
+        grade: 'III',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        coordinates: [
+          [-110.8300, 45.3100],
+          [-110.8280, 45.3080],
+          [-110.8260, 45.3060],
+          [-110.8240, 45.3040],
+          [-110.8220, 45.3020],
+          [-110.8200, 45.3000],
+          [-110.8180, 45.2980],
+          [-110.8160, 45.2960],
+          [-110.8140, 45.2940],
+          [-110.8120, 45.2920],
+          [-110.8100, 45.2900]
+        ]
+      }
+    ]
   }
 ];
 
