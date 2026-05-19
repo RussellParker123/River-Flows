@@ -306,7 +306,7 @@ function FlowChart({ river, currentFlow, segment }) {
     videos = videoId ? [{ id: videoId, label: 'Video' }] : [];
   }
   
-  console.log('FlowChart - Segment:', segment?.name, 'Videos array:', videos, 'Videos length:', videos.length);
+  console.log('FlowChart - Segment:', segment?.name, 'Has videos prop:', !!segment?.videos, 'Videos:', segment?.videos, 'Videos length:', videos.length);
   
   // Reset selectedVideoIndex if it's out of bounds
   const currentVideoIndex = selectedVideoIndex < videos.length ? selectedVideoIndex : 0;
@@ -351,7 +351,7 @@ function FlowChart({ river, currentFlow, segment }) {
 
   return (
     <div style={{ marginTop: '30px', padding: isMobile ? '15px' : '20px', backgroundColor: '#f5f5f5', borderRadius: '12px', marginBottom: isMobile ? '20px' : '0' }}>
-      <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}</h3>
+      <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}{segment ? ` - ${segment.name}` : ''}</h3>
       
       {youtubeUrl && !youtubeUrl.includes('placeholder') && (
         <div style={{ marginBottom: '30px' }}>
