@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, GeoJSON, useMap, Polyline, Marker, Popup, Laye
 import 'leaflet/dist/leaflet.css';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Analytics } from '@vercel/analytics/react';
 import usStates from './us-states.json';
 import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
@@ -133,15 +134,17 @@ function HomePage({ onNavigateToMap }) {
   }, []);
 
   return (
-    <div style={{ 
-      padding: isMobile ? '20px' : '40px', 
-      maxWidth: '1200px', 
-      margin: '0 auto',
-      backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.85) 0%, rgba(142, 68, 173, 0.8) 100%), url("https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=1200&h=800&fit=crop")',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
-      borderRadius: '12px',
+    <>
+      <Analytics />
+      <div style={{ 
+        padding: isMobile ? '20px' : '40px', 
+        maxWidth: '1200px', 
+        margin: '0 auto',
+        backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.85) 0%, rgba(142, 68, 173, 0.8) 100%), url("https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=1200&h=800&fit=crop")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        borderRadius: '12px',
       minHeight: '100vh',
       position: 'relative'
     }}>
@@ -1405,7 +1408,8 @@ function App() {
           <p style={{ marginTop: '20px', color: '#666' }}>Rivers are color-coded by rapid grade on the map.</p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
