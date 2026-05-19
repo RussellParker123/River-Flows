@@ -298,9 +298,15 @@ function FlowChart({ river, currentFlow, segment }) {
   const isMobile = window.innerWidth < 768;
   
   // Use segment's videos array if available, otherwise use youtube_url
-  const videos = (segment?.videos && Array.isArray(segment.videos) && segment.videos.length > 0) 
-    ? segment.videos 
-    : (segment?.youtube_url ? [{ id: segment.youtube_url.split('/embed/')[1], label: 'Video' }] : []);
+  let videos = [];
+  if (segment?.videos && Array.isArray(segment.videos) && segment.videos.length > 0) {
+    videos = segment.videos;
+  } else if (segment?.youtube_url) {
+    const videoId = segment.youtube_url.split('/embed/')[1];
+    videos = videoId ? [{ id: videoId, label: 'Video' }] : [];
+  }
+  
+  console.log('FlowChart - Segment:', segment?.name, 'Videos array:', videos, 'Videos length:', videos.length);
   
   // Reset selectedVideoIndex if it's out of bounds
   const currentVideoIndex = selectedVideoIndex < videos.length ? selectedVideoIndex : 0;
