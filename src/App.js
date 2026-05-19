@@ -354,21 +354,23 @@ function FlowChart({ river, currentFlow, segment }) {
       {youtubeUrl && !youtubeUrl.includes('placeholder') && (
         <div style={{ marginBottom: '30px' }}>
           {videos.length > 1 && (
-            <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ marginBottom: '12px', display: 'flex', gap: isMobile ? '6px' : '8px', flexWrap: 'wrap' }}>
               {videos.map((video, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedVideoIndex(index)}
                   style={{
-                    padding: '8px 12px',
+                    padding: isMobile ? '10px 14px' : '8px 12px',
                     backgroundColor: currentVideoIndex === index ? '#8e44ad' : '#ddd',
                     color: currentVideoIndex === index ? 'white' : '#333',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '0.85em' : '0.9em',
+                    fontSize: isMobile ? '0.9em' : '0.9em',
                     fontWeight: 'bold',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    flex: isMobile ? '1 1 auto' : 'auto',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   onMouseEnter={(e) => {
                     if (currentVideoIndex !== index) {
