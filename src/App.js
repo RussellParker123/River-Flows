@@ -301,7 +301,15 @@ function FlowChart({ river, currentFlow, segment }) {
   const videos = (segment?.videos && Array.isArray(segment.videos) && segment.videos.length > 0) 
     ? segment.videos 
     : (segment?.youtube_url ? [{ id: segment.youtube_url.split('/embed/')[1], label: 'Video' }] : []);
-  const youtubeUrl = videos.length > 0 ? `https://www.youtube.com/embed/${videos[selectedVideoIndex].id}` : river.youtube_url;
+  
+  // Reset selectedVideoIndex if it's out of bounds
+  const currentVideoIndex = selectedVideoIndex < videos.length ? selectedVideoIndex : 0;
+  const youtubeUrl = videos.length > 0 ? `https://www.youtube.com/embed/${videos[currentVideoIndex].id}` : river.youtube_url;
+
+  useEffect(() => {
+    // Reset video index when segment changes
+    setSelectedVideoIndex(0);
+  }, [segment]);
 
   useEffect(() => {
     if (river.usgs_gage) {
@@ -349,8 +357,8 @@ function FlowChart({ river, currentFlow, segment }) {
                   onClick={() => setSelectedVideoIndex(index)}
                   style={{
                     padding: '8px 12px',
-                    backgroundColor: selectedVideoIndex === index ? '#8e44ad' : '#ddd',
-                    color: selectedVideoIndex === index ? 'white' : '#333',
+                    backgroundColor: currentVideoIndex === index ? '#8e44ad' : '#ddd',
+                    color: currentVideoIndex === index ? 'white' : '#333',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
@@ -359,12 +367,12 @@ function FlowChart({ river, currentFlow, segment }) {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (selectedVideoIndex !== index) {
+                    if (currentVideoIndex !== index) {
                       e.currentTarget.style.backgroundColor = '#ccc';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (selectedVideoIndex !== index) {
+                    if (currentVideoIndex !== index) {
                       e.currentTarget.style.backgroundColor = '#ddd';
                     }
                   }}
