@@ -1409,6 +1409,8 @@ function App() {
           <p style={{ marginTop: '20px', color: '#666' }}>Rivers are color-coded by rapid grade on the map.</p>
         </div>
       )}
+      
+    </div>
     </>
   );
 }
