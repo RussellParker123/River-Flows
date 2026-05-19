@@ -306,8 +306,6 @@ function FlowChart({ river, currentFlow, segment }) {
     videos = videoId ? [{ id: videoId, label: 'Video' }] : [];
   }
   
-  console.log('FlowChart - Segment:', segment?.name, 'Has videos prop:', !!segment?.videos, 'Videos:', segment?.videos, 'Videos length:', videos.length);
-  
   // Reset selectedVideoIndex if it's out of bounds
   const currentVideoIndex = selectedVideoIndex < videos.length ? selectedVideoIndex : 0;
   const youtubeUrl = videos.length > 0 ? `https://www.youtube.com/embed/${videos[currentVideoIndex].id}` : river.youtube_url;
