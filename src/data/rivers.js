@@ -1875,7 +1875,7 @@ export const rivers = [
     forum_url: 'https://www.americanwhitewater.org/content/River/view/river-detail/1008/main',
     geology: 'Precambrian granite and metamorphic rock; Paleozoic limestone and sandstone; Mesozoic shale and sandstone',
     fish_species: 'Brown trout, cutthroat trout, rainbow trout',
-    youtube_url: 'https://www.youtube.com/embed/iUTGor2zlyE',
+    youtube_url: 'https://www.youtube.com/embed/cDNpy1waoMo',
     description: 'The "Mad Mile" - Infamous two-mile stretch dropping nearly 100 feet per mile with intense, challenging whitewater. Class III-IV (bumps to Class IV during spring snowmelt May-June). Expert-only section requiring serious paddling skills.',
     usgs_data: {
       current_flow: null,
@@ -1887,10 +1887,10 @@ export const rivers = [
       {
         name: 'House Rock - Mad Mile',
         grade: 'III',
-        youtube_url: 'https://www.youtube.com/embed/iUTGor2zlyE',
+        youtube_url: 'https://www.youtube.com/embed/cDNpy1waoMo',
         videos: [
-          { id: 'iUTGor2zlyE', label: 'With Rapid Timestamps' },
-          { id: 'cDNpy1waoMo', label: 'Alternative View' }
+          { id: 'cDNpy1waoMo', label: 'With Rapid Timestamps' },
+          { id: 'iUTGor2zlyE', label: 'Alternative View' }
         ],
         description: 'Rapids in order: Thumper → Hilarity\'s → Straight Away → Entrance Exam → Show Stopper → Old Bridge → Two Scoops → House Rock → The Mad Mile',
         coordinates: [
