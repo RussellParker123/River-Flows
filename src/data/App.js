@@ -134,20 +134,19 @@ function HomePage({ onNavigateToMap }) {
   }, []);
 
   return (
-    <>
-      <Analytics />
-      <div style={{ 
-        padding: isMobile ? '20px' : '40px', 
-        maxWidth: '1200px', 
-        margin: '0 auto',
-        backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.85) 0%, rgba(142, 68, 173, 0.8) 100%), url("https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=1200&h=800&fit=crop")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        borderRadius: '12px',
+    <div style={{ 
+      padding: isMobile ? '20px' : '40px', 
+      maxWidth: '1200px', 
+      margin: '0 auto',
+      backgroundImage: 'linear-gradient(135deg, rgba(52, 73, 94, 0.85) 0%, rgba(142, 68, 173, 0.8) 100%), url("https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=1200&h=800&fit=crop")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      borderRadius: '12px',
       minHeight: '100vh',
       position: 'relative'
     }}>
+      <Analytics />
       <h1 style={{ textAlign: 'center', fontSize: isMobile ? '1.8em' : '2.5em', marginBottom: '10px', color: '#fff', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
         🏞️ River Flows
       </h1>
@@ -290,8 +289,7 @@ function HomePage({ onNavigateToMap }) {
           </div>
         ))}
       </div>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -1411,7 +1409,6 @@ function App() {
       )}
       
     </div>
-    </>
   );
 }
 
