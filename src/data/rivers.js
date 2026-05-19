@@ -1888,6 +1888,10 @@ export const rivers = [
         name: 'House Rock - Mad Mile',
         grade: 'III',
         youtube_url: 'https://www.youtube.com/embed/iUTGor2zlyE',
+        videos: [
+          { id: 'iUTGor2zlyE', label: 'With Rapid Timestamps' },
+          { id: 'cDNpy1waoMo', label: 'Alternative View' }
+        ],
         description: 'Rapids in order: Thumper → Hilarity\'s → Straight Away → Entrance Exam → Show Stopper → Old Bridge → Two Scoops → House Rock → The Mad Mile',
         coordinates: [
           [-111.2466602, 45.458224],

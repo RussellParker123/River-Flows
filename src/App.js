@@ -294,10 +294,12 @@ function HomePage({ onNavigateToMap }) {
 function FlowChart({ river, currentFlow, segment }) {
   const [historicalData, setHistoricalData] = useState([]);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const isMobile = window.innerWidth < 768;
   
-  // Use segment's youtube_url if available, otherwise use river's youtube_url
-  const youtubeUrl = segment?.youtube_url || river.youtube_url;
+  // Use segment's videos array if available, otherwise use youtube_url
+  const videos = segment?.videos || (segment?.youtube_url ? [{ id: segment.youtube_url.split('/embed/')[1], label: 'Video' }] : []);
+  const youtubeUrl = videos.length > 0 ? `https://www.youtube.com/embed/${videos[selectedVideoIndex].id}` : river.youtube_url;
 
   useEffect(() => {
     if (river.usgs_gage) {
@@ -336,26 +338,61 @@ function FlowChart({ river, currentFlow, segment }) {
       <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}</h3>
       
       {youtubeUrl && !youtubeUrl.includes('placeholder') && (
-        <div style={{ marginBottom: '30px', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
-            <iframe
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                border: 'none'
-              }}
-              src={`${youtubeUrl}?autoplay=1&mute=1`}
-              title={`${segment?.name || river.name} Kayaking Video`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+        <div style={{ marginBottom: '30px' }}>
+          {videos.length > 1 && (
+            <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {videos.map((video, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedVideoIndex(index)}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: selectedVideoIndex === index ? '#8e44ad' : '#ddd',
+                    color: selectedVideoIndex === index ? 'white' : '#333',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: isMobile ? '0.85em' : '0.9em',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedVideoIndex !== index) {
+                      e.currentTarget.style.backgroundColor = '#ccc';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedVideoIndex !== index) {
+                      e.currentTarget.style.backgroundColor = '#ddd';
+                    }
+                  }}
+                >
+                  {video.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{ backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
+              <iframe
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 'none'
+                }}
+                src={`${youtubeUrl}?autoplay=1&mute=1`}
+                title={`${segment?.name || river.name} Kayaking Video`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            <p style={{ margin: '10px', color: '#666', fontSize: '0.9em' }}>
+              ▶️ Kayaking on {segment?.name || river.name} • {river.state}
+            </p>
           </div>
-          <p style={{ margin: '10px', color: '#666', fontSize: '0.9em' }}>
-            ▶️ Kayaking on {segment?.name || river.name} • {river.state}
-          </p>
         </div>
       )}
 
