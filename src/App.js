@@ -359,6 +359,13 @@ function FlowChart({ river, currentFlow, segment }) {
         </div>
       )}
 
+      {segment?.description && (
+        <div style={{ marginBottom: '30px', padding: isMobile ? '12px' : '15px', backgroundColor: '#fff3cd', borderRadius: '8px', borderLeft: `4px solid #ffc107` }}>
+          <h4 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1em' : '1.1em' }}>Rapids & Features</h4>
+          <p style={{ margin: '10px 0', color: '#555', lineHeight: '1.6', fontSize: isMobile ? '0.9em' : '1em' }}>{segment.description}</p>
+        </div>
+      )}
+
       {river.description && (
         <div style={{ marginBottom: '30px', padding: isMobile ? '12px' : '15px', backgroundColor: '#e8f4f8', borderRadius: '8px', borderLeft: `4px solid ${gradeColors[river.grade]}` }}>
           <h4 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1em' : '1.1em' }}>Trip Information</h4>
