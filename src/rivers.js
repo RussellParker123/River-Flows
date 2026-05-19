@@ -1644,10 +1644,11 @@ export const rivers = [
   {
     name: 'Madison River',
     state: 'MT',
-    grade: 'II',
+    grade: 'IV',
     usgs_gage: '06295000',
     forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
+    description: 'The Bear Trap Canyon is a rugged, highly scenic 9-mile stretch located in the Lee Metcalf Wilderness near Norris, Montana. Renowned for demanding whitewater and exceptional trout fishing, this section features the notorious Class IV/V "Kitchen Sink" rapid and offers both challenging whitewater and world-class fly fishing in a remote wilderness setting.',
     usgs_data: {
       current_flow: null,
       record_high: 12300,
@@ -1656,14 +1657,20 @@ export const rivers = [
     },
     segments: [
       {
-        name: 'Lower Madison',
-        grade: 'II',
+        name: 'Bear Trap Canyon',
+        grade: 'IV',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'WHITEWATER: A challenging 9-mile float with Class III and IV rapids including the legendary "Kitchen Sink" rapid (Class IV/V). Access: Below Madison Dam to Warm Springs/Greycliffs area. Recommended for highly skilled oarsmen and experienced whitewater rafters/kayakers using inflatable rafts. Registration at launch required. FISHING: Renowned for solitude and large trout. Nymphing and streamer fishing highly productive due to abundance of crayfish. Hatches include salmon fly (coinciding with high water), Mother\'s Day Caddis, PMDs, and baetis. Difficult wading due to challenging water and surrounding boulders. Access: Hike from downstream trailhead to access isolated sections. HIKING & WILDERNESS: The Bear Trap Canyon National Recreation Trail runs 9 miles alongside the river. Offers hiking, horseback riding, backpacking, and primitive camping from the north trailhead. Trail Creek Access (head of canyon) offers first ADA-accessible fishing and picnicking area on the Madison.',
         coordinates: [
           [-111.5600, 45.6200],
           [-111.5400, 45.6500],
           [-111.5200, 45.6800],
           [-111.5000, 45.7100],
-          [-111.4800, 45.7400]
+          [-111.4800, 45.7400],
+          [-111.4600, 45.7700],
+          [-111.4400, 45.8000],
+          [-111.4200, 45.8300],
+          [-111.4000, 45.8600]
         ]
       }
     ]
