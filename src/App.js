@@ -298,7 +298,9 @@ function FlowChart({ river, currentFlow, segment }) {
   const isMobile = window.innerWidth < 768;
   
   // Use segment's videos array if available, otherwise use youtube_url
-  const videos = segment?.videos && segment.videos.length > 0 ? segment.videos : (segment?.youtube_url ? [{ id: segment.youtube_url.split('/embed/')[1], label: 'Video' }] : []);
+  const videos = (segment?.videos && Array.isArray(segment.videos) && segment.videos.length > 0) 
+    ? segment.videos 
+    : (segment?.youtube_url ? [{ id: segment.youtube_url.split('/embed/')[1], label: 'Video' }] : []);
   const youtubeUrl = videos.length > 0 ? `https://www.youtube.com/embed/${videos[selectedVideoIndex].id}` : river.youtube_url;
 
   useEffect(() => {
