@@ -1644,11 +1644,11 @@ export const rivers = [
   {
     name: 'Madison River',
     state: 'MT',
-    grade: 'IV',
+    grade: 'II',
     usgs_gage: '06295000',
     forum_url: 'https://www.americanwhitewater.org',
     youtube_url: 'https://www.youtube.com/embed/placeholder',
-    description: 'The Bear Trap Canyon is a rugged, highly scenic 9-mile stretch located in the Lee Metcalf Wilderness near Norris, Montana. Renowned for demanding whitewater and exceptional trout fishing, this section features the notorious Class IV/V "Kitchen Sink" rapid and offers both challenging whitewater and world-class fly fishing in a remote wilderness setting.',
+    description: 'The Madison River in Montana offers world-class fly fishing and scenic float trips through Montana\'s Madison Valley. Below Ennis Dam, the river flows through multiple sections with excellent wading and float opportunities, featuring fast pocket water, numerous access points, and abundant insect hatches including salmonfly, caddis, and dry fly opportunities.',
     usgs_data: {
       current_flow: null,
       record_high: 12300,
@@ -1657,10 +1657,114 @@ export const rivers = [
     },
     segments: [
       {
+        name: 'Below Ennis Dam - Fast Pocket Water',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Fast pocket water attracts big brown and rainbow trout. Slippery wading. Access from Ennis Lake area.',
+        coordinates: [
+          [-111.7200, 45.3500],
+          [-111.7100, 45.3450],
+          [-111.7000, 45.3400],
+          [-111.6900, 45.3350],
+          [-111.6800, 45.3300]
+        ]
+      },
+      {
+        name: 'The Channels - Wade Fishing',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Explore numerous channels in this wade-fishing only section. Excellent access and easy wading. Good for both beginners and experienced anglers.',
+        coordinates: [
+          [-111.6800, 45.3300],
+          [-111.6700, 45.3250],
+          [-111.6600, 45.3200],
+          [-111.6500, 45.3150],
+          [-111.6400, 45.3100]
+        ]
+      },
+      {
+        name: 'Ennis Campground to Burnt Tree',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Walking upstream from campground provides access to numerous easily fished channels. Good caddis hatches. Wading can be difficult until water level drops (July 15). Good caddis and streamer area near Burnt Tree.',
+        coordinates: [
+          [-111.6400, 45.3100],
+          [-111.6300, 45.3050],
+          [-111.6200, 45.3000],
+          [-111.6100, 45.2950],
+          [-111.6000, 45.2900]
+        ]
+      },
+      {
+        name: 'Eight Mile to Varney Bridge',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Single channel area until half mile upstream, then nicely channeled. Good salmonfly and caddis area. Varney Bridge marks beginning of channel structure change from single to multiple channels with brown trout becoming dominant. Heavy salmonfly hatch and excellent wading. Popular float section.',
+        coordinates: [
+          [-111.6000, 45.2900],
+          [-111.5900, 45.2850],
+          [-111.5800, 45.2800],
+          [-111.5700, 45.2750],
+          [-111.5600, 45.2700]
+        ]
+      },
+      {
+        name: 'McAtee Bridge - Pocket Water Section',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Single channel flow with mid-stream pocket water. Royal Wulffs, Trudes, and Caddis patterns are excellent producers. Also a takeout point for floats from South Madison or Lyons Bridge.',
+        coordinates: [
+          [-111.5600, 45.2700],
+          [-111.5500, 45.2650],
+          [-111.5400, 45.2600],
+          [-111.5300, 45.2550],
+          [-111.5200, 45.2500]
+        ]
+      },
+      {
+        name: 'Ruby Creek to South Madison',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Lots of wading access up or downstream from Ruby Creek Campground. Single channel boulder water with late afternoon boat traffic. Scenic area with rock cliffs on west bank near South Madison.',
+        coordinates: [
+          [-111.5200, 45.2500],
+          [-111.5100, 45.2450],
+          [-111.5000, 45.2400],
+          [-111.4900, 45.2350],
+          [-111.4800, 45.2300]
+        ]
+      },
+      {
+        name: 'Lyons Bridge to West Fork Bridge',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: 'Lyons Bridge is popular boat launch site and starting point of float fishing section. Nice campground upstream from West Fork Bridge on west bank. Lots of wading access, especially on west side. Good dry fly fishing with Wulffs, caddis and hoppers.',
+        coordinates: [
+          [-111.4800, 45.2300],
+          [-111.4700, 45.2250],
+          [-111.4600, 45.2200],
+          [-111.4500, 45.2150],
+          [-111.4400, 45.2100]
+        ]
+      },
+      {
+        name: '3 Dollar Bridge to Raynolds Pass',
+        grade: 'II',
+        youtube_url: 'https://www.youtube.com/embed/placeholder',
+        description: '3 Dollar Bridge area offers excellent water for aggressive waders with nearby roads to Cliff and Wade Lakes. Catch and release area. Raynolds Pass Bridge has good wading access with heavy caddis activity in the evening. Excellent for evening dry fly fishing.',
+        coordinates: [
+          [-111.4400, 45.2100],
+          [-111.4300, 45.2050],
+          [-111.4200, 45.2000],
+          [-111.4100, 45.1950],
+          [-111.4000, 45.1900]
+        ]
+      },
+      {
         name: 'Bear Trap Canyon',
         grade: 'IV',
         youtube_url: 'https://www.youtube.com/embed/placeholder',
-        description: 'WHITEWATER: A challenging 9-mile float with Class III and IV rapids including the legendary "Kitchen Sink" rapid (Class IV/V). Access: Below Madison Dam to Warm Springs/Greycliffs area. Recommended for highly skilled oarsmen and experienced whitewater rafters/kayakers using inflatable rafts. Registration at launch required. FISHING: Renowned for solitude and large trout. Nymphing and streamer fishing highly productive due to abundance of crayfish. Hatches include salmon fly (coinciding with high water), Mother\'s Day Caddis, PMDs, and baetis. Difficult wading due to challenging water and surrounding boulders. Access: Hike from downstream trailhead to access isolated sections. HIKING & WILDERNESS: The Bear Trap Canyon National Recreation Trail runs 9 miles alongside the river. Offers hiking, horseback riding, backpacking, and primitive camping from the north trailhead. Trail Creek Access (head of canyon) offers first ADA-accessible fishing and picnicking area on the Madison.',
+        description: 'The Bear Trap Canyon is a rugged, highly scenic 9-mile stretch located in the Lee Metcalf Wilderness near Norris, Montana. Renowned for demanding whitewater and exceptional trout fishing, this section features the notorious Class IV/V "Kitchen Sink" rapid and offers both challenging whitewater and world-class fly fishing in a remote wilderness setting.',
         coordinates: [
           [-111.5600, 45.6200],
           [-111.5400, 45.6500],
