@@ -20,8 +20,8 @@ test('lists whitewater sections with their rapid classes', () => {
     />
   );
 
-  expect(screen.getByRole('button', { name: 'Upper Run Class III' })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByRole('button', { name: 'Lower Run Class II' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: 'Upper Run, Class III' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: 'Lower Run, Class II' })).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('selecting a section notifies the parent', () => {
@@ -35,6 +35,6 @@ test('selecting a section notifies the parent', () => {
     />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Lower Run Class II' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Lower Run, Class II' }));
   expect(onSelect).toHaveBeenCalledWith(river.segments[1]);
 });
