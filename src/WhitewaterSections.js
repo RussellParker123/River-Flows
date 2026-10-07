@@ -16,6 +16,7 @@ export function WhitewaterSections({ river, selectedSegment, onSelect, gradeColo
               key={segment.name}
               type="button"
               className={`whitewater-section${isSelected ? ' is-selected' : ''}`}
+              aria-label={`${segment.name}, Class ${grade}`}
               aria-pressed={isSelected}
               onClick={() => onSelect(segment)}
               style={{ '--section-grade-color': gradeColors[grade] || '#666' }}
