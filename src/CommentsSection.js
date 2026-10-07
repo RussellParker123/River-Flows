@@ -48,9 +48,15 @@ export function CommentsSection({ riverName, riverState }) {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setComments(prev => [payload.new, ...prev]);
+            if (payload.new.river_state === riverState) {
+              setComments(prev => [payload.new, ...prev]);
+            }
           } else if (payload.eventType === 'DELETE') {
-            setComments(prev => prev.filter(c => c.id !== payload.old.id));
+            if (payload.old.river_state === riverState) {
+              setComments(prev => prev.filter(c => c.id !== payload.old.id));
+            } else if (payload.old.river_state == null) {
+              fetchComments();
+            }
           }
         }
       )

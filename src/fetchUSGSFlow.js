@@ -3,6 +3,22 @@
 // Returns the latest instantaneous discharge (parameter 00060) in cfs, or null.
 
 const cache = new Map(); // simple in-memory cache for recent gage lookups
+const flowCache = new Map();
+const FLOW_CACHE_TTL = 5 * 60 * 1000;
+
+function getCachedFlow(cacheKey) {
+  const cached = flowCache.get(cacheKey);
+  if (!cached) return { found: false };
+  if (Date.now() - cached.timestamp >= FLOW_CACHE_TTL) {
+    flowCache.delete(cacheKey);
+    return { found: false };
+  }
+  return { found: true, value: cached.value };
+}
+
+function setCachedFlow(cacheKey, value) {
+  flowCache.set(cacheKey, { value, timestamp: Date.now() });
+}
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const toRad = v => (v * Math.PI) / 180;
@@ -17,7 +33,8 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 async function fetchBySiteId(siteId) {
   if (!siteId) return null;
   const cacheKey = `site:${siteId}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  const cached = getCachedFlow(cacheKey);
+  if (cached.found) return cached.value;
   const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteId}&parameterCd=00060&siteStatus=all`;
   try {
     const res = await fetch(url);
@@ -25,7 +42,7 @@ async function fetchBySiteId(siteId) {
     const data = await res.json();
     const ts = data.value?.timeSeries || [];
     if (!ts.length) {
-      cache.set(cacheKey, null);
+      setCachedFlow(cacheKey, null);
       return null;
     }
     // find first series with values
@@ -34,11 +51,11 @@ async function fetchBySiteId(siteId) {
       if (vals && vals.length) {
         const latest = vals[vals.length - 1];
         const num = latest && latest.value ? Number(latest.value) : null;
-        cache.set(cacheKey, num);
+        setCachedFlow(cacheKey, num);
         return num;
       }
     }
-    cache.set(cacheKey, null);
+    setCachedFlow(cacheKey, null);
     return null;
   } catch (err) {
     console.error('fetchBySiteId error', err);
@@ -49,7 +66,8 @@ async function fetchBySiteId(siteId) {
 async function fetchNearestByLatLng(lat, lng) {
   if (lat == null || lng == null) return null;
   const cacheKey = `near:${lat.toFixed(4)},${lng.toFixed(4)}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  const cached = getCachedFlow(cacheKey);
+  if (cached.found) return cached.value;
 
   // try progressively larger bounding boxes (degrees)
   const deltas = [0.02, 0.05, 0.2, 1.0];
@@ -86,11 +104,11 @@ async function fetchNearestByLatLng(lat, lng) {
         }
       }
       if (best) {
-        cache.set(cacheKey, best.num);
+        setCachedFlow(cacheKey, best.num);
         return best.num;
       }
     }
-    cache.set(cacheKey, null);
+    setCachedFlow(cacheKey, null);
     return null;
   } catch (err) {
     console.error('fetchNearestByLatLng error', err);
