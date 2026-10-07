@@ -9,6 +9,7 @@ import usStates from './us-states.json';
 import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
 import { CommentsSection } from './CommentsSection';
+import { WhitewaterSections } from './WhitewaterSections';
 
 // v1.5 - User location tracking + Salmon River accurate coordinates
 // Fix for default Leaflet marker icons
@@ -630,6 +631,7 @@ function App() {
           const coords = seg.coordinates || [];
           const isHighlighted = highlightedRiver === river.name;
           const isHovered = hoveredRiver === river.name;
+          const isSelectedSegment = selectedRiver === river.name && selectedSegment?.name === seg.name;
           
           // If only one coordinate (single USGS gage point), create a marker
           if (coords.length === 1) {
@@ -692,8 +694,8 @@ function App() {
           }
           
           // If multiple coordinates, create polylines as before
-          const lineWeight = isHighlighted ? 8 : isHovered ? 6 : 5;
-          const lineOpacity = isHighlighted ? 1 : isHovered ? 0.9 : 0.8;
+          const lineWeight = isSelectedSegment ? 10 : isHighlighted ? 8 : isHovered ? 6 : 5;
+          const lineOpacity = isSelectedSegment || isHighlighted ? 1 : isHovered ? 0.9 : 0.8;
           
           // Pre-compute transformed coordinates
           const transformedCoords = coords.map(([lng, lat]) => [lat, lng]);
@@ -704,8 +706,8 @@ function App() {
               positions={transformedCoords}
               pathOptions={{ 
                 color: '#000', 
-                weight: isHighlighted ? 10 : 8, 
-                opacity: isHighlighted ? 0.5 : 0.35 
+                weight: isSelectedSegment ? 12 : isHighlighted ? 10 : 8, 
+                opacity: isSelectedSegment || isHighlighted ? 0.5 : 0.35 
               }}
               eventHandlers={{
                 mouseover: () => handleRiverHover(river.name),
@@ -755,7 +757,7 @@ function App() {
           return [outline, line];
         });
       });
-  }, [selectedState, highlightedRiver, hoveredRiver, flows, handleRiverClick, handleRiverHover, handleRiverLeave]);
+  }, [selectedState, selectedRiver, selectedSegment, highlightedRiver, hoveredRiver, flows, handleRiverClick, handleRiverHover, handleRiverLeave]);
 
   useEffect(() => {
     if (!selectedState) return;
@@ -1133,10 +1135,7 @@ function App() {
                       setSelectedSegment(null);
                     } else {
                       setSelectedRiver(river.name);
-                      // Set segment to the first segment of this river
-                      if (river.segments && river.segments.length > 0) {
-                        setSelectedSegment(river.segments[0]);
-                      }
+                      setSelectedSegment(river.segments?.[0] || null);
                     }
                   }}
                   style={{
@@ -1260,6 +1259,12 @@ function App() {
           <div style={{ padding: '15px', paddingBottom: '80px' }}>
             {rivers.find(r => r.name === selectedRiver) && (
               <>
+                <WhitewaterSections
+                  river={rivers.find(r => r.name === selectedRiver)}
+                  selectedSegment={selectedSegment}
+                  onSelect={setSelectedSegment}
+                  gradeColors={gradeColors}
+                />
                 <FlowChart 
                   river={rivers.find(r => r.name === selectedRiver)} 
                   currentFlow={flows[selectedRiver]}
@@ -1354,7 +1359,15 @@ function App() {
                 </button>
 
                 <button
-                  onClick={() => setSelectedRiver(selectedRiver === river.name ? null : river.name)}
+                  onClick={() => {
+                    if (selectedRiver === river.name) {
+                      setSelectedRiver(null);
+                      setSelectedSegment(null);
+                    } else {
+                      setSelectedRiver(river.name);
+                      setSelectedSegment(river.segments?.[0] || null);
+                    }
+                  }}
                   style={{
                     marginTop: '10px',
                     padding: '8px 15px',
@@ -1396,6 +1409,12 @@ function App() {
                 
                 {selectedRiver === river.name && (
                   <>
+                    <WhitewaterSections
+                      river={river}
+                      selectedSegment={selectedSegment}
+                      onSelect={setSelectedSegment}
+                      gradeColors={gradeColors}
+                    />
                     <FlowChart river={river} currentFlow={flows[river.name]} segment={selectedSegment} />
                     <CommentsSection riverName={river.name} riverState={river.state} />
                   </>
