@@ -2,7 +2,31 @@
 // Supports either a site id (string/number) or a search point { lat, lng }
 // Returns the latest instantaneous discharge (parameter 00060) in cfs, or null.
 
-const cache = new Map(); // simple in-memory cache for recent gage lookups
+const entries = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const cache = {
+  has(key) {
+    const entry = entries.get(key);
+    if (!entry) return false;
+    if (Date.now() >= entry.expiresAt) {
+      entries.delete(key);
+      return false;
+    }
+    return true;
+  },
+  get(key) {
+    return entries.get(key)?.value;
+  },
+  set(key, value) {
+    entries.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
+  },
+};
+
+function dischargeValue(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const toRad = v => (v * Math.PI) / 180;
@@ -33,7 +57,7 @@ async function fetchBySiteId(siteId) {
       const vals = s.values?.[0]?.value;
       if (vals && vals.length) {
         const latest = vals[vals.length - 1];
-        const num = latest && latest.value ? Number(latest.value) : null;
+        const num = dischargeValue(latest?.value);
         cache.set(cacheKey, num);
         return num;
       }
@@ -78,7 +102,7 @@ async function fetchNearestByLatLng(lat, lng) {
         const vals = s.values?.[0]?.value;
         if (!vals || !vals.length) continue;
         const latest = vals[vals.length - 1];
-        const num = latest && latest.value ? Number(latest.value) : null;
+        const num = dischargeValue(latest?.value);
         if (num == null) continue;
         const distKm = haversineKm(lat, lng, Number(latVal), Number(lonVal));
         if (!best || distKm < best.distKm) {
@@ -151,10 +175,11 @@ export async function fetchHistoricalFlow(siteId) {
     for (const series of ts) {
       const values = series.values?.[0]?.value || [];
       for (const entry of values) {
-        if (entry.value && entry.dateTime) {
+        const flow = dischargeValue(entry.value);
+        if (flow !== null && entry.dateTime) {
           historicalData.push({
             date: entry.dateTime.split('T')[0],
-            flow: Number(entry.value),
+            flow,
             dateObj: new Date(entry.dateTime)
           });
         }
