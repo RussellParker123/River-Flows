@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/river-master.js": { "maxDuration": 60 },
+    "api/river-master-jobs.js": { "maxDuration": 180 }
+  },
+  "crons": [
+    { "path": "/api/river-master-jobs?job=collection", "schedule": "*/15 * * * *" },
+    { "path": "/api/river-master-jobs?job=manager", "schedule": "0 6 * * *" }
+  ]
+}

@@ -37,6 +37,78 @@ must support the configured cron frequency on your hosting plan; otherwise use
 an authenticated external scheduler. Local `npm start` serves only the frontend,
 so integrated chat testing requires the server-side functions as well.
 
+### Operator review
+
+Review each proposal's evidence and affected reach before making a change.
+Research drafts are not published river guidance, and community drafts are not
+posted comments. Approving a draft in storage does not execute it: a maintainer
+must apply the reviewed change through the usual deployment or moderation process.
+
+Before enabling scheduled work in production:
+
+1. Apply the migration in a staging Supabase project first; check that anonymous
+   users cannot read private proposals, usage, locks, or budget records.
+2. Review gauge associations against authoritative station/reach information.
+   Leave uncertain associations unapproved.
+3. Set a monthly AI cap and current model pricing explicitly. Configure provider
+   account limits as an additional safeguard; application reservations are
+   conservative estimates, not a replacement for provider billing.
+4. Test missing credentials, exhausted budgets, repeated requests, overlapping
+   cron calls, upstream failures, and unavailable measurements before activation.
+5. Monitor job results and usage. Disable the scheduler or remove the AI key to
+   stop future paid calls; calls already in flight may still incur charges.
+
+### Server configuration
+
+Apply `supabase/migrations/202610090001_river_master.sql` using a database-owner
+connection. Configure these variables in your server deployment, not the browser:
+
+| Variable | Purpose |
+| --- | --- |
+| `SUPABASE_URL` | Your Supabase project URL. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Backend-only database credential; never expose to visitors. |
+| `ANTHROPIC_API_KEY` | Backend-only Anthropic API credential. |
+| `ANTHROPIC_MODEL` | Claude API model identifier; defaults to `claude-sonnet-4-5`. Confirm availability in your account. |
+| `RIVER_MASTER_MONTHLY_BUDGET_USD` | Explicit positive monthly application cap in USD. Missing or invalid values disable paid calls. |
+| `RIVER_MASTER_MODEL_RATES` | JSON object keyed by the exact model identifier, with positive numeric `input` and `output` prices in USD per million tokens. Set these from current provider pricing. |
+| `RIVER_MASTER_IP_HASH_SECRET` | Random secret of at least 32 characters for hashing rate-limit identifiers. |
+| `CRON_SECRET` | Random secret of at least 24 characters; authenticates scheduled jobs and private status requests. |
+| `RIVER_MASTER_OWN_ORIGIN` | Optional HTTPS origin of this website for its manifest health check; no path, credentials, query, or non-default port. |
+
+Chat and coordinator calls share atomic database-backed reservations. Ambiguous
+upstream failures retain their reservation rather than retrying a possibly billed
+request. The monthly accounting window is UTC. Provider/API costs, hosting costs,
+and database costs are separate. Setting a cap does not configure Anthropic billing.
+Within a month, the stored cap can decrease automatically but cannot increase via
+environment changes alone; raising it requires an explicit database-owner review
+of that month's `rm_months` record. Keep configured model prices current and do not
+lower prices below the provider's applicable rates.
+
+Vercel schedules collection every 15 minutes and the coordinator daily at 06:00 UTC.
+The coordinator rotates through rivers and saves specialist proposals and a
+prioritized River Master report. It is not a continuous autonomous coding service:
+its maintenance check observes the site manifest, and proposed fixes still need a
+maintainer to implement, test, and deploy.
+
+The authenticated `GET /api/river-master-status` endpoint reports usage and job
+activity. Send the cron secret as a bearer token in the Authorization header
+from an operator tool, never from the public chat panel. The same authentication is required for
+`GET /api/river-master-jobs?job=collection` and
+`GET /api/river-master-jobs?job=manager`.
+
+Review gauge mappings in the private `rm_gauge_approvals` table: each approval
+identifies the exact river name, state, segment name, and gauge ID, with reviewer,
+evidence URL, and review timestamp. Approve only mappings supported by authoritative
+evidence. Review proposals in `rm_proposals`; status changes record review but do
+not execute public actions.
+
+The selected section panel refreshes stored observations every five minutes via
+`GET /api/river-observations` with exact `riverName`, `riverState`, and `segmentName`
+query parameters. It displays a measurement as section-verified only when its
+association was approved. Readings older than two hours are marked stale.
+This read-only public endpoint exposes measurement provenance, not private
+proposals, spending records, or administrative capabilities.
+
 ## Available Scripts
 
 In the project directory, you can run:

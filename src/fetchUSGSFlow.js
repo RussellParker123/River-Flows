@@ -1,5 +1,5 @@
 // Robust USGS flow fetcher
-// Supports either a site id (string/number) or a search point { lat, lng }
+// Supports a site id (string/number) or { site }; geographic guesses are not used.
 // Returns the latest instantaneous discharge (parameter 00060) in cfs, or null.
 
 const cache = new Map();
@@ -63,100 +63,6 @@ export async function fetchUSGSObservation(gage) {
     remember(key, observation);
     return observation;
   } catch {
-    return null;
-  }
-}
-
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = v => (v * Math.PI) / 180;
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
-
-async function fetchBySiteId(siteId) {
-  if (!siteId) return null;
-  const cacheKey = `site:${siteId}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
-  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteId}&parameterCd=00060&siteStatus=all`;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Network response not ok');
-    const data = await res.json();
-    const ts = data.value?.timeSeries || [];
-    if (!ts.length) {
-      cache.set(cacheKey, null);
-      return null;
-    }
-    // find first series with values
-    for (const s of ts) {
-      const vals = s.values?.[0]?.value;
-      if (vals && vals.length) {
-        const latest = vals[vals.length - 1];
-        const num = latest && latest.value ? Number(latest.value) : null;
-        cache.set(cacheKey, num);
-        return num;
-      }
-    }
-    cache.set(cacheKey, null);
-    return null;
-  } catch (err) {
-    console.error('fetchBySiteId error', err);
-    return null;
-  }
-}
-
-async function fetchNearestByLatLng(lat, lng) {
-  if (lat == null || lng == null) return null;
-  const cacheKey = `near:${lat.toFixed(4)},${lng.toFixed(4)}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
-
-  // try progressively larger bounding boxes (degrees)
-  const deltas = [0.02, 0.05, 0.2, 1.0];
-  try {
-    for (const d of deltas) {
-      const minLat = lat - d;
-      const maxLat = lat + d;
-      const minLon = lng - d;
-      const maxLon = lng + d;
-      const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&parameterCd=00060&bBox=${minLon},${minLat},${maxLon},${maxLat}&siteStatus=all`;
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const data = await res.json();
-      const ts = data.value?.timeSeries || [];
-      if (!ts.length) continue;
-      // find the nearest site with a valid latest value
-      let best = null;
-      for (const s of ts) {
-        const source = s.sourceInfo || {};
-        const geo = source.geoLocation?.geogLocation || source.geoLocation || {};
-        const siteLat = geo.latitude ?? geo.latitude;
-        const siteLon = geo.longitude ?? geo.longitude;
-        const latVal = siteLat ?? s.sourceInfo?.geoLocation?.geogLocation?.latitude ?? null;
-        const lonVal = siteLon ?? s.sourceInfo?.geoLocation?.geogLocation?.longitude ?? null;
-        if (latVal == null || lonVal == null) continue;
-        const vals = s.values?.[0]?.value;
-        if (!vals || !vals.length) continue;
-        const latest = vals[vals.length - 1];
-        const num = latest && latest.value ? Number(latest.value) : null;
-        if (num == null) continue;
-        const distKm = haversineKm(lat, lng, Number(latVal), Number(lonVal));
-        if (!best || distKm < best.distKm) {
-          best = { distKm, num };
-        }
-      }
-      if (best) {
-        cache.set(cacheKey, best.num);
-        return best.num;
-      }
-    }
-    cache.set(cacheKey, null);
-    return null;
-  } catch (err) {
-    console.error('fetchNearestByLatLng error', err);
     return null;
   }
 }
@@ -226,7 +132,8 @@ export async function fetchGageCoordinates(siteId) {
   if (!siteId) return null;
   
   const cacheKey = `gageCoords:${siteId}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  const hit = cached(cacheKey);
+  if (hit !== undefined) return hit;
   
   try {
     // USGS Water Services API - Site Info
@@ -238,7 +145,6 @@ export async function fetchGageCoordinates(siteId) {
     
     const sites = data.value?.sites || [];
     if (!sites.length) {
-      cache.set(cacheKey, null);
       return null;
     }
     
@@ -256,11 +162,10 @@ export async function fetchGageCoordinates(siteId) {
     };
     
     if (coordinates.lat && coordinates.lng) {
-      cache.set(cacheKey, coordinates);
+      remember(cacheKey, coordinates);
       return coordinates;
     }
     
-    cache.set(cacheKey, null);
     return null;
   } catch (err) {
     console.error('fetchGageCoordinates error', err);

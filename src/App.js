@@ -6,9 +6,10 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Analytics } from '@vercel/analytics/react';
 import usStates from './us-states.json';
-import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
+import { fetchUSGSFlow, fetchUSGSObservation, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
 import { CommentsSection } from './CommentsSection';
+import RiverMasterChat from './RiverMasterChat';
 
 // v1.5 - User location tracking + Salmon River accurate coordinates
 // Fix for default Leaflet marker icons
@@ -265,7 +266,8 @@ function HomePage({ onNavigateToMap }) {
             <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #eee' }}>
               <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#888' }}>Live Flow:</p>
               <p style={{ margin: '5px 0', fontSize: '1.8em', fontWeight: 'bold', color: gradeColors[river.grade] }}>
-                {loading ? '...' : (flows[river.name] !== undefined && flows[river.name] !== null) ? `${Math.round(flows[river.name])} CFS` : 'N/A'}
+                {loading ? '...' : Number.isFinite(flows[river.name]) ? `${Math.round(flows[river.name])} CFS` : 'N/A'}
+                {' '}<small>Gauge data; section mapping unverified</small>
               </p>
             </div>
 
@@ -293,7 +295,21 @@ function HomePage({ onNavigateToMap }) {
   );
 }
 
-function FlowChart({ river, currentFlow, segment }) {
+export function monthlyFlowStats(data) {
+  const groups = new Map();
+  data.forEach(({ date, flow }) => {
+    const month = date.slice(0, 7);
+    if (!groups.has(month)) groups.set(month, []);
+    if (Number.isFinite(flow) && flow >= 0) groups.get(month).push(flow);
+  });
+  return [...groups].map(([month, values]) => ({
+    month, flow: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
+    days: values.length
+  }));
+}
+
+export function FlowChart({ river, currentFlow, observation, segment: selectedSection, onSegmentChange }) {
+  const segment = river.segments?.includes(selectedSection) ? selectedSection : river.segments?.[0];
   const [historicalData, setHistoricalData] = useState([]);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
@@ -318,40 +334,34 @@ function FlowChart({ river, currentFlow, segment }) {
   }, [segment]);
 
   useEffect(() => {
+    let active = true;
+    setHistoricalData([]);
+    setLoadingHistorical(Boolean(river.usgs_gage));
     if (river.usgs_gage) {
       fetchHistoricalFlow(river.usgs_gage).then(data => {
+        if (!active) return;
         setHistoricalData(data);
         setLoadingHistorical(false);
       });
     }
-  }, [river.usgs_gage]);
+    return () => { active = false; };
+  }, [river.name, river.state, river.usgs_gage]);
 
-  // Generate sample monthly data for visualization
-  const monthlyData = [
-    { month: 'Jan', flow: river.usgs_data.yearly_average * 0.7, recordHigh: river.usgs_data.record_high * 0.3 },
-    { month: 'Feb', flow: river.usgs_data.yearly_average * 0.75, recordHigh: river.usgs_data.record_high * 0.35 },
-    { month: 'Mar', flow: river.usgs_data.yearly_average * 0.9, recordHigh: river.usgs_data.record_high * 0.45 },
-    { month: 'Apr', flow: river.usgs_data.yearly_average * 1.3, recordHigh: river.usgs_data.record_high * 0.7 },
-    { month: 'May', flow: river.usgs_data.yearly_average * 1.5, recordHigh: river.usgs_data.record_high * 0.85 },
-    { month: 'Jun', flow: river.usgs_data.yearly_average * 1.4, recordHigh: river.usgs_data.record_high * 0.9 },
-    { month: 'Jul', flow: river.usgs_data.yearly_average * 1.0, recordHigh: river.usgs_data.record_high * 0.6 },
-    { month: 'Aug', flow: river.usgs_data.yearly_average * 0.85, recordHigh: river.usgs_data.record_high * 0.5 },
-    { month: 'Sep', flow: river.usgs_data.yearly_average * 0.8, recordHigh: river.usgs_data.record_high * 0.4 },
-    { month: 'Oct', flow: river.usgs_data.yearly_average * 0.75, recordHigh: river.usgs_data.record_high * 0.35 },
-    { month: 'Nov', flow: river.usgs_data.yearly_average * 0.7, recordHigh: river.usgs_data.record_high * 0.3 },
-    { month: 'Dec', flow: river.usgs_data.yearly_average * 0.65, recordHigh: river.usgs_data.record_high * 0.25 }
-  ];
-
-  const statsData = [
-    { name: 'Current', value: currentFlow || 0 },
-    { name: 'Yearly Avg', value: river.usgs_data.yearly_average },
-    { name: 'Record High', value: river.usgs_data.record_high },
-    { name: 'Record Low', value: river.usgs_data.record_low }
-  ];
+  const monthlyData = monthlyFlowStats(historicalData);
 
   return (
     <div style={{ marginTop: '30px', padding: isMobile ? '15px' : '20px', backgroundColor: '#f5f5f5', borderRadius: '12px', marginBottom: isMobile ? '20px' : '0' }}>
       <h3 style={{ marginTop: 0, color: '#333', fontSize: isMobile ? '1.2em' : '1.5em' }}>Flow Analysis - {river.name}{segment ? ` - ${segment.name}` : ''}</h3>
+      {onSegmentChange && river.segments?.length > 0 && <label>
+        River section{' '}
+        <select aria-label="River section" value={segment?.name || ''} onChange={event =>
+          onSegmentChange(river.segments.find(section => section.name === event.target.value))}>
+          {river.segments.map(section => <option key={section.name} value={section.name}>{section.name}</option>)}
+        </select>
+      </label>}
+      <RiverMasterChat riverName={river.name} riverState={river.state} segmentName={segment?.name} />
+      <p>USGS gauge data — association with this river section is unverified. Gauge readings are not a safety assessment.</p>
+      {river.usgs_gage && <p><a href={`https://waterdata.usgs.gov/monitoring-location/${river.usgs_gage}/#parameterCode=00060`} target="_blank" rel="noopener noreferrer">USGS gauge {river.usgs_gage} source</a></p>}
       
       {youtubeUrl && !youtubeUrl.includes('placeholder') && (
         <div style={{ marginBottom: '30px' }}>
@@ -429,9 +439,11 @@ function FlowChart({ river, currentFlow, segment }) {
       )}
       
       <div style={{ marginBottom: '30px' }}>
-        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Monthly Average Flow Pattern</h4>
+        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Monthly averages of available daily means (CFS)</h4>
+        <p>Past-year observations only, not a forecast or all-time records. Partial months and missing days are not estimated.</p>
+        {!loadingHistorical && monthlyData.length > 0 ? <>
         <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
-          <LineChart data={monthlyData}>
+          <BarChart data={monthlyData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" fontSize={isMobile ? 12 : 14} />
             <YAxis fontSize={isMobile ? 12 : 14} />
@@ -440,19 +452,21 @@ function FlowChart({ river, currentFlow, segment }) {
               labelStyle={{ color: '#000' }}
             />
             <Legend />
-            <Line 
-              type="monotone" 
+            <Bar
               dataKey="flow" 
-              stroke={gradeColors[river.grade]} 
-              name="Expected Flow"
-              dot={{ fill: gradeColors[river.grade], r: isMobile ? 3 : 4 }}
+              fill={gradeColors[river.grade]}
+              name="Observed monthly average"
             />
-          </LineChart>
+          </BarChart>
         </ResponsiveContainer>
+        <ul aria-label="Monthly observation counts">{monthlyData.map(month =>
+          <li key={month.month}>{month.month}: {month.days} observed days; average {Number.isFinite(month.flow) ? `${Math.round(month.flow)} CFS` : 'unavailable'}</li>)}</ul>
+        </> : <p>{loadingHistorical ? 'Loading monthly observations…' : 'No monthly observations available.'}</p>}
       </div>
 
       <div style={{ marginBottom: '30px' }}>
-        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Historical Flow - Past Year</h4>
+        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Historical daily mean gauge discharge — past year (CFS)</h4>
+        <p>Gaps indicate unavailable daily means; they are not zero flow. Daily means differ from instantaneous readings.</p>
         {loadingHistorical ? (
           <p style={{ color: '#999', fontStyle: 'italic' }}>Loading historical data...</p>
         ) : historicalData.length > 0 ? (
@@ -474,10 +488,11 @@ function FlowChart({ river, currentFlow, segment }) {
               />
               <Legend />
               <Line 
-                type="monotone" 
+                type="linear"
                 dataKey="flow" 
                 stroke={gradeColors[river.grade]} 
-                name="Daily Flow"
+                name="Observed daily mean"
+                connectNulls={false}
                 dot={false}
                 isAnimationActive={false}
               />
@@ -488,27 +503,9 @@ function FlowChart({ river, currentFlow, segment }) {
         )}
       </div>
 
-      <div>
-        <h4 style={{ color: '#555', marginBottom: '10px', fontSize: isMobile ? '0.95em' : '1em' }}>Flow Statistics (CFS)</h4>
-        <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
-          <BarChart data={statsData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" fontSize={isMobile ? 11 : 12} />
-            <YAxis fontSize={isMobile ? 12 : 14} />
-            <Tooltip 
-              formatter={(value) => `${Math.round(value)} CFS`}
-              labelStyle={{ color: '#000' }}
-            />
-            <Bar dataKey="value" fill={gradeColors[river.grade]} radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
       <div style={{ marginTop: '20px', padding: isMobile ? '12px' : '15px', backgroundColor: '#fff', borderRadius: '8px', fontSize: isMobile ? '0.85em' : '0.9em' }}>
-        <p style={{ margin: '5px 0' }}><strong>Current:</strong> {currentFlow ? `${Math.round(currentFlow)} CFS` : 'Loading...'}</p>
-        <p style={{ margin: '5px 0' }}><strong>Yearly Average:</strong> {Math.round(river.usgs_data.yearly_average)} CFS</p>
-        <p style={{ margin: '5px 0' }}><strong>Record High:</strong> {Math.round(river.usgs_data.record_high)} CFS</p>
-        <p style={{ margin: '5px 0' }}><strong>Record Low:</strong> {Math.round(river.usgs_data.record_low)} CFS</p>
+        <p><strong>Latest instantaneous gauge discharge:</strong> {Number.isFinite(currentFlow) ? `${Math.round(currentFlow)} CFS` : 'Unavailable'}</p>
+        <p>Observed: {observation?.observedAt ? <time dateTime={observation.observedAt}>{observation.observedAt}</time> : 'Timestamp unavailable'}. Readings may be stale or provisional.</p>
       </div>
 
       <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -551,6 +548,7 @@ function FlowChart({ river, currentFlow, segment }) {
 function App() {
   const [selectedState, setSelectedState] = useState(null);
   const [flows, setFlows] = useState({});
+  const [observations, setObservations] = useState({});
   const [view, setView] = useState('home'); // 'home' or 'map'
   const [selectedRiver, setSelectedRiver] = useState(null);
   const [selectedSegment, setSelectedSegment] = useState(null);
@@ -669,7 +667,7 @@ function App() {
                   {river.usgs_gage && (
                     <>
                       USGS Gage: {river.usgs_gage}<br />
-                      Flow: {flows[river.name] !== undefined ? `${Math.round(flows[river.name])} CFS` : 'Loading...'}
+                      Gauge flow (section mapping unverified): {Number.isFinite(flows[river.name]) ? `${Math.round(flows[river.name])} CFS` : 'Unavailable'}
                     </>
                   )}
                   {river.geology && (
@@ -759,13 +757,19 @@ function App() {
 
   useEffect(() => {
     if (!selectedState) return;
+    let active = true;
     const riversInState = rivers.filter(r => r.state === selectedState);
-    riversInState.forEach(river => {
+    const refresh = () => riversInState.forEach(river => {
       if (!river.usgs_gage) return;
-      fetchUSGSFlow(river.usgs_gage).then(flow => {
-        setFlows(f => ({ ...f, [river.name]: flow }));
+      fetchUSGSObservation(river.usgs_gage).then(observation => {
+        if (!active) return;
+        setFlows(f => ({ ...f, [river.name]: observation?.value ?? null }));
+        setObservations(previous => ({ ...previous, [river.name]: observation }));
       });
     });
+    refresh();
+    const timer = setInterval(refresh, 300000);
+    return () => { active = false; clearInterval(timer); };
   }, [selectedState]);
 
   useEffect(() => {
@@ -1099,8 +1103,8 @@ function App() {
                 {' '}<span style={{ fontSize: '0.85em', color: '#666' }}>Class {river.grade}</span>
               </h3>
               <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
-                Current Flow: <strong>
-                  {flows[river.name] !== undefined ? (
+                Gauge flow (section mapping unverified): <strong>
+                  {Number.isFinite(flows[river.name]) ? (
                     `${Math.round(flows[river.name])} CFS`
                   ) : (
                     <span style={{ color: '#999' }}>
@@ -1263,7 +1267,9 @@ function App() {
                 <FlowChart 
                   river={rivers.find(r => r.name === selectedRiver)} 
                   currentFlow={flows[selectedRiver]}
+                  observation={observations[selectedRiver]}
                   segment={selectedSegment}
+                  onSegmentChange={setSelectedSegment}
                 />
                 <CommentsSection riverName={selectedRiver} riverState={rivers.find(r => r.name === selectedRiver)?.state} />
               </>
@@ -1316,8 +1322,8 @@ function App() {
                   </a>
                 </h3>
                 <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#666' }}>
-                  Current Flow: <strong>
-                    {flows[river.name] !== undefined ? (
+                  Gauge flow (section mapping unverified): <strong>
+                    {Number.isFinite(flows[river.name]) ? (
                       `${Math.round(flows[river.name])} CFS`
                     ) : (
                       <span style={{ color: '#999' }}>
@@ -1396,7 +1402,7 @@ function App() {
                 
                 {selectedRiver === river.name && (
                   <>
-                    <FlowChart river={river} currentFlow={flows[river.name]} segment={selectedSegment} />
+                    <FlowChart river={river} currentFlow={flows[river.name]} observation={observations[river.name]} segment={selectedSegment} onSegmentChange={setSelectedSegment} />
                     <CommentsSection riverName={river.name} riverState={river.state} />
                   </>
                 )}

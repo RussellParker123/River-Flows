@@ -1,0 +1,12 @@
+.river-master { margin: 20px 0; padding: 16px; border: 2px solid #426278; border-radius: 10px; background: #fff; color: #182c38; overflow-wrap: anywhere; }
+.river-master h3 { margin-top: 0; }
+.river-master-ai { display: inline-block; font-size: .75em; padding: 4px 8px; background: #e7eff5; border-radius: 6px; }
+.river-master-warning { border-left: 4px solid #a55c00; padding: 10px; background: #fff4de; }
+.river-master label { display: block; font-weight: bold; margin-bottom: 8px; }
+.river-master textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; padding: 10px; min-height: 90px; }
+.river-master button { margin-top: 10px; padding: 12px 16px; border: 0; border-radius: 6px; background: #254f6a; color: white; font: inherit; cursor: pointer; }
+.river-master button:disabled { background: #65717a; cursor: not-allowed; }
+.river-master :focus-visible { outline: 3px solid #aa6200; outline-offset: 3px; }
+.river-master-answer { white-space: pre-wrap; }
+.river-master li { margin-bottom: 10px; }
+@media (max-width: 767px) { .river-master { padding: 12px; } .river-master button { width: 100%; } }
