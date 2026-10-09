@@ -1,6 +1,6 @@
 import {
   validCoordinate, gageKey, gagePoint, segmentRecords, filterRecords,
-  recordsGeoJSON, gagesGeoJSON, readPlan, distanceMiles, measurementGeoJSON,
+  recordsGeoJSON, gagesGeoJSON, readPlan, distanceMiles, measurementGeoJSON, gradeColor,
 } from './mapData';
 
 const rivers = [
@@ -57,6 +57,26 @@ test('validates malformed saved data and drops unknown itinerary references', ()
   const result = readPlan(JSON.stringify({ version: 1, waypoints: [
     good, good, { ...good, id: 'w2', coordinates: [43, -110] },
     { ...good, id: 'w3', kind: 'verified access' }, { ...good, id: 'w4', name: '' }, null,
-  ], itinerary: ['0:0', 'missing', {}] }), records);
-  expect(result).toEqual({ waypoints: [good], itinerary: ['0:0'], invalid: true });
+  ], itinerary: [records[0].id, 'missing', {}] }), records);
+  expect(result).toEqual({ waypoints: [good], itinerary: [records[0].id], invalid: true });
+});
+
+test('saved itinerary keeps the same reaches when river and segment ordering changes', () => {
+  const saved = JSON.stringify({ version: 1, waypoints: [], itinerary: [records[0].id, records[2].id] });
+  const reordered = segmentRecords([
+    rivers[1], { ...rivers[0], segments: [...rivers[0].segments].reverse() },
+  ]);
+  const restored = readPlan(saved, reordered);
+  expect(restored.invalid).toBe(false);
+  expect(restored.itinerary.map(id => reordered.find(record => record.id === id).segment.name)).toEqual(['Upper', 'Lower']);
+  expect(reordered.find(record => record.segment.name === 'Upper').id).toBe(records[0].id);
+});
+
+test('colors exact and compound difficulty classes with unknown fallback', () => {
+  expect(gradeColor('III-IV')).toBe(gradeColor('III'));
+  expect(gradeColor('IV+')).toBe(gradeColor('IV'));
+  expect(gradeColor('V+')).toBe(gradeColor('V'));
+  expect(gradeColor('III')).not.toBe(gradeColor('II'));
+  expect(gradeColor('Unknown')).toBe('#627785');
+  expect(gradeColor('constructor')).toBe('#627785');
 });

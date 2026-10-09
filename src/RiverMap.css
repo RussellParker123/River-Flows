@@ -47,6 +47,9 @@
 .river-filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .river-safety, .river-notice { border-left: 4px solid #b47517; padding: 10px; background: #fff4dc; }
 .river-legend { font-size: .8rem; color: #4b6273; }
+div.river-legend { display: flex; flex-wrap: wrap; gap: 8px; }
+.river-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.river-legend i { width: 14px; height: 4px; display: inline-block; }
 .river-results { max-height: 300px; overflow-y: auto; padding: 0; list-style: none; margin: 0; }
 .river-results li { margin-bottom: 7px; }
 .river-results button { display: grid; width: 100%; text-align: left; gap: 3px; }

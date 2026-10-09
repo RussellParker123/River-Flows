@@ -41,13 +41,15 @@ function HomePage({ onNavigateToMap }) {
 
   useEffect(() => {
     let active = true;
-    const fetchAllFlows = async () => {
+    const fetchAllFlows = async (refresh = false) => {
       const flowData = {};
       for (const river of rivers) {
         if (!active) return;
         if (river.usgs_gage) {
           try {
-            flowData[river.name] = await fetchUSGSFlow(river.usgs_gage);
+            flowData[river.name] = refresh
+              ? await fetchUSGSFlow(river.usgs_gage, { refresh })
+              : await fetchUSGSFlow(river.usgs_gage);
           } catch {
             flowData[river.name] = null;
           }
@@ -60,7 +62,7 @@ function HomePage({ onNavigateToMap }) {
     };
 
     fetchAllFlows();
-    const interval = setInterval(fetchAllFlows, 300000);
+    const interval = setInterval(() => fetchAllFlows(true), 300000);
     return () => {
       active = false;
       clearInterval(interval);

@@ -32,6 +32,36 @@ test('zero discharge is a valid measurement', async () => {
   expect(await fetchUSGSFlow('zero-test')).toBe(0);
 });
 
+test('scheduled refresh bypasses a cache populated after a slow response', async () => {
+  fetch.mockImplementationOnce(async () => {
+    Date.now.mockReturnValue(3000);
+    return response('12');
+  }).mockResolvedValueOnce(response('24'));
+  expect(await fetchUSGSFlow('poll-test')).toBe(12);
+  Date.now.mockReturnValue(301000);
+  expect(await fetchUSGSFlow('poll-test')).toBe(12);
+  expect(await fetchUSGSFlow('poll-test', { refresh: true })).toBe(24);
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test('scheduled refresh also bypasses nearby gage lookups', async () => {
+  const nearResponse = value => ({
+    ok: true,
+    json: async () => ({
+      value: { timeSeries: [{
+        sourceInfo: { geoLocation: { geogLocation: { latitude: 43, longitude: -110 } } },
+        values: [{ value: [{ value }] }],
+      }] },
+    }),
+  });
+  fetch.mockResolvedValueOnce(nearResponse('12')).mockResolvedValueOnce(nearResponse('24'));
+  const point = { lat: 43, lng: -110 };
+  expect(await fetchUSGSFlow(point)).toBe(12);
+  expect(await fetchUSGSFlow(point)).toBe(12);
+  expect(await fetchUSGSFlow(point, { refresh: true })).toBe(24);
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
+
 test.each(['-999999', 'NaN', '', 'Infinity'])('invalid discharge %s is unavailable', async (value) => {
   fetch.mockResolvedValue(response(value));
   expect(await fetchUSGSFlow(`invalid-${value}`)).toBeNull();

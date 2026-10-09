@@ -2,7 +2,10 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import RiverMap from './RiverMap';
 import * as maplibregl from 'maplibre-gl';
 import { fetchUSGSFlow } from './fetchUSGSFlow';
-import { STORAGE_KEY } from './mapData';
+import { STORAGE_KEY, segmentId } from './mapData';
+
+const upperId = segmentId({ state: 'WY', name: 'Test River' }, { name: 'Upper Test' });
+const gageId = segmentId({ state: 'WY', name: 'Test River' }, { name: 'Test Gage' });
 
 jest.mock('./mapConfig', () => ({
   __esModule: true,
@@ -27,12 +30,13 @@ jest.mock('./rivers', () => ({ rivers: [
 jest.mock('maplibre-gl', () => {
   const instances = [];
   const controlInstances = [];
-  const MockControl = jest.fn().mockImplementation(() => {
+  const createControl = () => {
     const control = { on: jest.fn(), off: jest.fn() };
     controlInstances.push(control);
     return control;
-  });
-  const Map = jest.fn().mockImplementation(() => {
+  };
+  const MockControl = jest.fn(createControl);
+  const createMap = () => {
     const events = {};
     const sources = {};
     const layers = {};
@@ -61,12 +65,13 @@ jest.mock('maplibre-gl', () => {
     };
     instances.push(map);
     return map;
-  });
+  };
+  const Map = jest.fn(createMap);
   return {
     __esModule: true,
     Map, NavigationControl: MockControl, FullscreenControl: MockControl, GeolocateControl: MockControl,
     LngLatBounds: jest.fn().mockImplementation(() => ({ extend: jest.fn().mockReturnThis() })),
-    instances, controlInstances,
+    instances, controlInstances, createMap, createControl,
   };
 }, { virtual: true });
 
@@ -75,6 +80,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   maplibregl.instances.length = 0;
   maplibregl.controlInstances.length = 0;
+  maplibregl.Map.mockImplementation(maplibregl.createMap);
+  maplibregl.GeolocateControl.mockImplementation(maplibregl.createControl);
+  maplibregl.LngLatBounds.mockImplementation(() => ({ extend: jest.fn().mockReturnThis() }));
   fetchUSGSFlow.mockResolvedValue(0);
 });
 
@@ -100,13 +108,14 @@ test('filters exact difficulty and state; deduplicates gages and preserves valid
   expect(screen.getByRole('button', { name: /Another River/ })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Search rivers and segments'), { target: { value: 'missing' } });
   expect(screen.getByText(/No matching segments/)).toBeInTheDocument();
+  await act(async () => { await Promise.resolve(); });
 });
 
 test('shows loading separately from unavailable and passes discharge into details', async () => {
   fetchUSGSFlow.mockResolvedValue(null);
   const details = jest.fn(() => <p>Existing charts</p>);
   render(<RiverMap initialState="WY" renderDetails={details} />);
-  expect(screen.getAllByText('Loading flow…')).toHaveLength(2);
+  expect(screen.getAllByText(/Loading flow…/)).toHaveLength(2);
   await screen.findAllByText('Flow unavailable');
   fireEvent.click(screen.getByRole('button', { name: /Test River Test Gage/ }));
   expect(screen.getByText(/Only a single location/)).toBeInTheDocument();
@@ -139,9 +148,9 @@ test('saves named user waypoints, measures map clicks and manages ordered itiner
   fireEvent.click(screen.getByRole('button', { name: /Test River Test Gage/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Add segment to trip' }));
   fireEvent.click(screen.getByRole('button', { name: 'Move trip item 2 up' }));
-  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual(['0:1', '0:0']);
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual([gageId, upperId]);
   fireEvent.click(screen.getByRole('button', { name: 'Remove trip item 1' }));
-  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual(['0:0']);
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual([upperId]);
   fireEvent.click(screen.getByRole('button', { name: 'Delete waypoint <b>My spot</b>' }));
   expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).waypoints).toEqual([]);
 });
@@ -150,7 +159,7 @@ test('recreates overlays after satellite style swaps, applies terrain, selects m
   const { unmount } = render(<RiverMap />);
   await screen.findAllByText('0 cfs');
   loadStyle();
-  currentMap().queryRenderedFeatures.mockReturnValue([{ properties: { id: '0:0' } }]);
+  currentMap().queryRenderedFeatures.mockReturnValue([{ properties: { id: upperId } }]);
   clickMap();
   expect(screen.getByRole('heading', { name: 'Upper Test' })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Basemap'), { target: { value: 'satellite' } });
@@ -158,7 +167,7 @@ test('recreates overlays after satellite style swaps, applies terrain, selects m
   expect(map.setStyle.mock.calls[map.setStyle.mock.calls.length - 1][0].sources.satellite.attribution).toBe('Test imagery provider');
   loadStyle();
   expect(map.sources['river-reaches'].data.features).toHaveLength(3);
-  expect(map.setFilter).toHaveBeenCalledWith('river-selected', ['all', ['==', '$type', 'LineString'], ['==', 'id', '0:0']]);
+  expect(map.setFilter).toHaveBeenCalledWith('river-selected', ['all', ['==', '$type', 'LineString'], ['==', 'id', upperId]]);
   fireEvent.click(screen.getByLabelText('3D terrain'));
   expect(map.sources['river-terrain']).toMatchObject({ type: 'raster-dem', encoding: 'mapbox', tileSize: 256 });
   expect(map.setTerrain).toHaveBeenLastCalledWith({ source: 'river-terrain', exaggeration: 1 });
@@ -171,7 +180,7 @@ test('recreates overlays after satellite style swaps, applies terrain, selects m
 });
 
 test('restores saved plan and warns for invalid data or inaccessible storage', async () => {
-  localStorage.setItem(STORAGE_KEY, '{"version":1,"waypoints":[],"itinerary":["0:0","bad"]}');
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, waypoints: [], itinerary: [upperId, 'bad'] }));
   const { unmount } = render(<RiverMap />);
   await screen.findAllByText('0 cfs');
   expect(screen.getByRole('alert')).toHaveTextContent('invalid');
@@ -181,6 +190,7 @@ test('restores saved plan and warns for invalid data or inaccessible storage', a
   render(<RiverMap />);
   expect(screen.getByRole('alert')).toHaveTextContent('Local storage unavailable');
   getItem.mockRestore();
+  await screen.findAllByText(/0 cfs/);
 });
 
 test('falls back to accessible river and trip controls when WebGL cannot initialize', async () => {
@@ -194,6 +204,20 @@ test('falls back to accessible river and trip controls when WebGL cannot initial
   expect(screen.getByRole('button', { name: 'Add by clicking map' })).toBeDisabled();
 });
 
+test('fits the initial and changed state geometry without reloading the initial basemap', async () => {
+  render(<RiverMap initialState="WY" />);
+  await screen.findAllByText(/0 cfs/);
+  loadStyle();
+  const map = currentMap();
+  expect(map.fitBounds).toHaveBeenCalled();
+  expect(maplibregl.LngLatBounds).toHaveBeenLastCalledWith([-110, 43], [-110, 43]);
+  expect(map.setStyle).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('State'), { target: { value: 'CO' } });
+  expect(maplibregl.LngLatBounds).toHaveBeenLastCalledWith([-105, 40], [-105, 40]);
+  await screen.findAllByText(/0 cfs/);
+  expect(map.layers['river-lines'].paint['line-color']).toEqual(expect.arrayContaining(['III-IV', '#8544ad']));
+});
+
 test('refreshes every five minutes and ignores stale requests after filter changes', async () => {
   jest.useFakeTimers();
   try {
@@ -201,15 +225,15 @@ test('refreshes every five minutes and ignores stale requests after filter chang
     fetchUSGSFlow.mockImplementation(gage => gage === '12345'
       ? new Promise(resolve => { oldResolve = resolve; }) : Promise.resolve(12));
     render(<RiverMap initialState="WY" />);
-    await act(async () => {});
+    await waitFor(() => expect(fetchUSGSFlow).toHaveBeenCalledWith('12345'));
     fireEvent.change(screen.getByLabelText('State'), { target: { value: 'CO' } });
-    await act(async () => {});
+    await screen.findByText('12 cfs');
     await act(async () => oldResolve(999));
     fireEvent.change(screen.getByLabelText('State'), { target: { value: 'WY' } });
-    expect(screen.getAllByText('Loading flow…')).toHaveLength(2);
+    expect(screen.getAllByText(/Loading flow…/)).toHaveLength(2);
     fetchUSGSFlow.mockResolvedValue(50);
     await act(async () => { jest.advanceTimersByTime(300000); });
-    await waitFor(() => expect(screen.getAllByText('50 cfs')).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText(/50 cfs/)).toHaveLength(2));
   } finally {
     jest.useRealTimers();
   }

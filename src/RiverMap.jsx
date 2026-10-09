@@ -6,13 +6,14 @@ import { rivers } from './rivers';
 import { fetchUSGSFlow } from './fetchUSGSFlow';
 import mapConfig from './mapConfig';
 import {
-  STORAGE_KEY, waypointKinds, segmentRecords, filterRecords, recordsGeoJSON,
+  STORAGE_KEY, waypointKinds, gradeColor, gradeColors, segmentRecords, filterRecords, recordsGeoJSON,
   gagesGeoJSON, waypointsGeoJSON, measurementGeoJSON, distanceMiles, readPlan, gageKey,
 } from './mapData';
 
 const records = segmentRecords(rivers);
 const states = [...new Set(rivers.map(river => river.state))].sort();
 const grades = [...new Set(records.map(record => record.grade))].sort();
+const gradePaint = ['match', ['get', 'grade'], ...grades.flatMap(grade => [grade, gradeColor(grade)]), '#627785'];
 const demoStyle = 'https://demotiles.maplibre.org/style.json';
 const satelliteAvailable = Boolean(mapConfig.satelliteTiles && mapConfig.satelliteAttribution);
 const terrainAvailable = Boolean(mapConfig.terrainTiles && mapConfig.terrainAttribution);
@@ -63,11 +64,11 @@ function syncOverlays(map, data) {
   });
   const layers = [
     { id: 'river-lines', type: 'line', source: 'river-reaches', filter: ['==', '$type', 'LineString'],
-      paint: { 'line-color': '#197cbd', 'line-width': 4 } },
+      paint: { 'line-color': gradePaint, 'line-width': 4 } },
     { id: 'river-selected', type: 'line', source: 'river-reaches',
       filter: ['==', 'id', data.selectedId || ''], paint: { 'line-color': '#ffd166', 'line-width': 7 } },
     { id: 'river-points', type: 'circle', source: 'river-reaches', filter: ['==', '$type', 'Point'],
-      paint: { 'circle-color': '#197cbd', 'circle-radius': 7, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } },
+      paint: { 'circle-color': gradePaint, 'circle-radius': 7, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } },
     { id: 'river-selected-point', type: 'circle', source: 'river-reaches',
       filter: ['all', ['==', '$type', 'Point'], ['==', 'id', data.selectedId || '']],
       paint: { 'circle-color': '#ffd166', 'circle-radius': 9, 'circle-stroke-color': '#172d3f', 'circle-stroke-width': 2 } },
@@ -118,6 +119,8 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   const container = useRef(null);
   const mapRef = useRef(null);
   const latest = useRef(null);
+  const needsStateFit = useRef(true);
+  const previousBasemap = useRef('vector');
   const visible = useMemo(() => filterRecords(records, { state, query, grade }), [state, query, grade]);
   const selected = records.find(record => record.id === selectedId);
   latest.current = { visible, selectedId, terrain, waypoints: plan.waypoints, measurement, mode, waypointName, waypointKind };
@@ -167,15 +170,14 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
     let map;
     let observer;
     let geolocate;
-    let initialFit = false;
     const geolocationError = () => setLocationError('Location unavailable or permission denied. You can still browse rivers.');
     const styleLoaded = () => {
       try {
         syncOverlays(map, latest.current);
-        if (!initialFit && initial.state) {
+        if (needsStateFit.current) {
           const coordinates = latest.current.visible.flatMap(record => record.coordinates);
           fitRecord(map, { coordinates });
-          initialFit = true;
+          needsStateFit.current = false;
         }
         setMapError('');
       } catch {
@@ -260,6 +262,20 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   }, [visible, selectedId, plan.waypoints, measurement, terrain]);
 
   useEffect(() => {
+    needsStateFit.current = true;
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    try {
+      fitRecord(map, { coordinates: latest.current.visible.flatMap(record => record.coordinates) });
+      needsStateFit.current = false;
+    } catch {
+      setMapError('Unable to zoom to the selected state. Use the river list.');
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (previousBasemap.current === basemap) return;
+    previousBasemap.current = basemap;
     const map = mapRef.current;
     if (!map) return;
     try { map.setStyle(basemap === 'satellite' ? rasterStyle() : mapConfig.style || demoStyle); }
@@ -308,7 +324,12 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
           </label>
           {(mapConfig.satelliteTiles && !satelliteAvailable) || (mapConfig.terrainTiles && !terrainAvailable)
             ? <p className="river-notice">Configured tiles need provider attribution before they can be enabled.</p> : null}
-          <p className="river-legend">Blue: approximate river · Purple: gage / flow lookup point · Orange: user waypoint or measurement</p>
+          <div className="river-legend" aria-label="River difficulty colors">
+            {Object.entries(gradeColors).map(([className, color]) => <span key={className}>
+              <i style={{ background: color }} aria-hidden="true" />Class {className}
+            </span>)}
+          </div>
+          <p className="river-legend">Compound classes use the first class color; gray means unknown. Yellow: selected segment · Purple dots: gage / flow lookup point · Orange: user waypoint or measurement</p>
         </section>
         <section aria-labelledby="river-search-heading">
           <h2 id="river-search-heading">Explore rivers</h2>

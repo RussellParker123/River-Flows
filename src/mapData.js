@@ -1,5 +1,15 @@
 export const STORAGE_KEY = 'river-flows-map-plan-v1';
 export const waypointKinds = ['waypoint', 'put-in', 'take-out'];
+export const gradeColors = { I: '#21854a', II: '#197cbd', III: '#8544ad', IV: '#ca3f36', V: '#212121', 'V+': '#212121' };
+
+export function gradeColor(grade) {
+  const primary = typeof grade === 'string' ? grade.match(/^(V\+|IV|III|II|I|V)(?=$|[-+/(\s])/)?.[1] : null;
+  return gradeColors[primary] || '#627785';
+}
+
+export function segmentId(river, segment) {
+  return encodeURIComponent(JSON.stringify([river.state || '', river.name || '', segment.name || '']));
+}
 
 export function validCoordinate(point) {
   return Array.isArray(point) && point.length === 2 &&
@@ -21,8 +31,8 @@ export function gagePoint(gage) {
 }
 
 export function segmentRecords(rivers) {
-  return rivers.flatMap((river, riverIndex) => (river.segments || []).map((segment, segmentIndex) => ({
-    id: `${riverIndex}:${segmentIndex}`,
+  return rivers.flatMap(river => (river.segments || []).map(segment => ({
+    id: segmentId(river, segment),
     river,
     segment,
     grade: segment.grade || river.grade || 'Unknown',

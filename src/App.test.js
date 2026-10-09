@@ -124,6 +124,40 @@ test('renders the homepage, live zero/unavailable flows, and sorts cards without
   expect(fetchUSGSFlow.mock.calls).toEqual([['gage-a'], ['gage-b']]);
 });
 
+test('bypasses the live-flow cache at each five-minute refresh and stops polling on unmount', async () => {
+  jest.useFakeTimers();
+  try {
+    let unmount;
+    await act(async () => {
+      ({ unmount } = render(<App />));
+    });
+    expect(fetchUSGSFlow.mock.calls).toEqual([['gage-a'], ['gage-b']]);
+    await act(async () => {
+      jest.advanceTimersByTime(299999);
+    });
+    expect(fetchUSGSFlow).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(fetchUSGSFlow.mock.calls.slice(2)).toEqual([
+      ['gage-a', { refresh: true }], ['gage-b', { refresh: true }]
+    ]);
+    await act(async () => {
+      jest.advanceTimersByTime(300000);
+    });
+    expect(fetchUSGSFlow.mock.calls.slice(4)).toEqual([
+      ['gage-a', { refresh: true }], ['gage-b', { refresh: true }]
+    ]);
+    unmount();
+    await act(async () => {
+      jest.advanceTimersByTime(300000);
+    });
+    expect(fetchUSGSFlow).toHaveBeenCalledTimes(6);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
 test('explores all rivers, returns home, selects a state, and clears that filter on all-rivers navigation', async () => {
   await renderHome();
   fireEvent.click(screen.getByRole('button', { name: 'Explore all rivers' }));

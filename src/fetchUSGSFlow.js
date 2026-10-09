@@ -38,10 +38,10 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-async function fetchBySiteId(siteId) {
+async function fetchBySiteId(siteId, refresh = false) {
   if (!siteId) return null;
   const cacheKey = `site:${siteId}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  if (!refresh && cache.has(cacheKey)) return cache.get(cacheKey);
   const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteId}&parameterCd=00060&siteStatus=all`;
   try {
     const res = await fetch(url);
@@ -70,10 +70,10 @@ async function fetchBySiteId(siteId) {
   }
 }
 
-async function fetchNearestByLatLng(lat, lng) {
+async function fetchNearestByLatLng(lat, lng, refresh = false) {
   if (lat == null || lng == null) return null;
   const cacheKey = `near:${lat.toFixed(4)},${lng.toFixed(4)}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  if (!refresh && cache.has(cacheKey)) return cache.get(cacheKey);
 
   // try progressively larger bounding boxes (degrees)
   const deltas = [0.02, 0.05, 0.2, 1.0];
@@ -122,19 +122,19 @@ async function fetchNearestByLatLng(lat, lng) {
   }
 }
 
-export async function fetchUSGSFlow(gage) {
+export async function fetchUSGSFlow(gage, { refresh = false } = {}) {
   if (!gage) return null;
   // if gage is a direct site id
   if (typeof gage === 'string' || typeof gage === 'number') {
-    return fetchBySiteId(gage);
+    return fetchBySiteId(gage, refresh);
   }
   // if gage is an object with lat/lng or { lat, lng }
   if (typeof gage === 'object') {
-    if (gage.site) return fetchBySiteId(gage.site);
+    if (gage.site) return fetchBySiteId(gage.site, refresh);
     if (('lat' in gage && 'lng' in gage) || ('latitude' in gage && 'longitude' in gage)) {
       const lat = gage.lat ?? gage.latitude;
       const lng = gage.lng ?? gage.longitude ?? gage.lon;
-      return fetchNearestByLatLng(Number(lat), Number(lng));
+      return fetchNearestByLatLng(Number(lat), Number(lng), refresh);
     }
   }
   return null;

@@ -55,7 +55,8 @@ No onX code, private APIs, or proprietary datasets are used.
   select a reach from the list or map. Single-coordinate records are gauge
   points, not runnable reaches.
 - Discharge distinguishes loading, unavailable, and zero CFS. Recent lookups
-  expire after five minutes so periodic refreshes can retrieve new readings.
+  expire after five minutes; scheduled polls explicitly bypass the cache
+  so slow responses do not delay the next fresh reading.
 - Enable GPS explicitly using the location control. Browser permission and
   HTTPS (or localhost) are required.
 - Add named waypoints and **user-designated** put-ins/take-outs. These are
