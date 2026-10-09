@@ -2,6 +2,41 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## River Master
+
+River Master adds a section-aware Claude chat panel and scheduled background work.
+The public chatbot has no administrative tools. A separate, authenticated coordinator
+prioritizes work for the website maintainer, improvement agent, community agent,
+river researcher, historical-flow analyst, and live-flow watcher.
+
+### Publication policy
+
+- Official flow observations may be collected automatically without an AI call.
+  A gauge-to-reach association must be reviewed before measurements are described
+  as verified for that reach. A nearby gauge alone is not sufficient evidence.
+- Code fixes, deployments, river descriptions, and community replies are proposals
+  requiring human review. The coordinator does not deploy code or post comments.
+- AI answers are advisory, not safety assessments. Readings must include their
+  source and observation time; missing or stale data must not become a zero reading
+  or an invented flow. Static river descriptions are not automatically verified.
+- Historical charts show recorded daily means, not instantaneous measurements.
+  Missing observations are gaps, and statistics from the displayed period are not
+  all-time records.
+
+### Deployment prerequisites
+
+This implementation targets Vercel server-side functions and Supabase Postgres.
+It does not provision hosting, purchase an AI subscription, or enable paid calls
+on its own. A Claude chat subscription does not include Anthropic API usage.
+Apply the included database migration and configure server-only credentials and
+an explicit budget before enabling AI. Never put Anthropic keys, service-role
+keys, or cron authentication secrets in `REACT_APP_*` variables or source control.
+
+Background collection runs on a schedule, even when no browser is open. Vercel
+must support the configured cron frequency on your hosting plan; otherwise use
+an authenticated external scheduler. Local `npm start` serves only the frontend,
+so integrated chat testing requires the server-side functions as well.
+
 ## Available Scripts
 
 In the project directory, you can run:

@@ -2,7 +2,70 @@
 // Supports either a site id (string/number) or a search point { lat, lng }
 // Returns the latest instantaneous discharge (parameter 00060) in cfs, or null.
 
-const cache = new Map(); // simple in-memory cache for recent gage lookups
+const cache = new Map();
+export const FLOW_CACHE_TTL = 5 * 60 * 1000;
+
+function cached(key) {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.fetchedAt < FLOW_CACHE_TTL) return entry.data;
+  cache.delete(key);
+  return undefined;
+}
+
+function remember(key, data) {
+  cache.set(key, { data, fetchedAt: Date.now() });
+}
+
+function siteCode(gage) {
+  const site = typeof gage === 'object' ? gage?.site : gage;
+  return /^\d{8,15}$/.test(String(site)) ? String(site) : null;
+}
+
+function dischargeSeries(series, site, daily = false) {
+  return series.filter(s =>
+    s.sourceInfo?.siteCode?.some(code => code.value === site) &&
+    s.variable?.variableCode?.some(code => code.value === '00060') &&
+    s.variable?.unit?.unitCode === 'ft3/s' &&
+    (!daily || s.variable?.options?.option?.some(option => option.optionCode === '00003'))
+  );
+}
+
+function validFlow(entry, series) {
+  if (entry?.value == null || String(entry.value).trim() === '') return null;
+  const value = Number(entry.value);
+  return Number.isFinite(value) && value >= 0 && value !== Number(series.variable?.noDataValue)
+    ? value : null;
+}
+
+export async function fetchUSGSObservation(gage) {
+  const site = siteCode(gage);
+  if (!site) return null; // Proximity alone does not establish a gauge/reach association.
+  const key = `site:${site}`;
+  const hit = cached(key);
+  if (hit !== undefined) return hit;
+  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${site}&parameterCd=00060&siteStatus=all`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const data = await response.json();
+    const readings = dischargeSeries(data.value?.timeSeries || [], site).flatMap(series =>
+      (series.values || []).flatMap(group => (group.value || []).map(entry => ({
+        value: validFlow(entry, series),
+        observedAt: entry.dateTime
+      })))
+    ).filter(entry => entry.value !== null && Number.isFinite(Date.parse(entry.observedAt)));
+    readings.sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt));
+    if (!readings.length) return null;
+    const observation = {
+      ...readings[0], siteId: site, units: 'cfs', mappingVerified: false,
+      sourceUrl: `https://waterdata.usgs.gov/monitoring-location/${site}/#parameterCode=00060`
+    };
+    remember(key, observation);
+    return observation;
+  } catch {
+    return null;
+  }
+}
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const toRad = v => (v * Math.PI) / 180;
@@ -99,29 +162,17 @@ async function fetchNearestByLatLng(lat, lng) {
 }
 
 export async function fetchUSGSFlow(gage) {
-  if (!gage) return null;
-  // if gage is a direct site id
-  if (typeof gage === 'string' || typeof gage === 'number') {
-    return fetchBySiteId(gage);
-  }
-  // if gage is an object with lat/lng or { lat, lng }
-  if (typeof gage === 'object') {
-    if (gage.site) return fetchBySiteId(gage.site);
-    if (('lat' in gage && 'lng' in gage) || ('latitude' in gage && 'longitude' in gage)) {
-      const lat = gage.lat ?? gage.latitude;
-      const lng = gage.lng ?? gage.longitude ?? gage.lon;
-      return fetchNearestByLatLng(Number(lat), Number(lng));
-    }
-  }
-  return null;
+  return (await fetchUSGSObservation(gage))?.value ?? null;
 }
 
 // Fetch historical daily mean data for the past year
 export async function fetchHistoricalFlow(siteId) {
+  siteId = siteCode(siteId);
   if (!siteId) return [];
   
   const cacheKey = `historical:${siteId}`;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  const hit = cached(cacheKey);
+  if (hit !== undefined) return hit;
   
   try {
     // Calculate date range: past 365 days
@@ -134,36 +185,35 @@ export async function fetchHistoricalFlow(siteId) {
     const end = formatDate(endDate);
     
     // USGS Daily Values API
-    const url = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=${siteId}&parameterCd=00060&startDT=${start}&endDT=${end}&siteStatus=all`;
+    const url = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=${siteId}&parameterCd=00060&statCd=00003&startDT=${start}&endDT=${end}&siteStatus=all`;
     
     const res = await fetch(url);
     if (!res.ok) throw new Error('Network response not ok');
     const data = await res.json();
     
-    const ts = data.value?.timeSeries || [];
+    const ts = dischargeSeries(data.value?.timeSeries || [], siteId, true);
     if (!ts.length) {
-      cache.set(cacheKey, []);
       return [];
     }
     
     // Extract daily mean values
-    const historicalData = [];
+    const byDate = new Map();
     for (const series of ts) {
-      const values = series.values?.[0]?.value || [];
+      const values = (series.values || []).flatMap(group => group.value || []);
       for (const entry of values) {
-        if (entry.value && entry.dateTime) {
-          historicalData.push({
-            date: entry.dateTime.split('T')[0],
-            flow: Number(entry.value),
-            dateObj: new Date(entry.dateTime)
-          });
+        const date = entry.dateTime?.split('T')[0];
+        if (date && date >= start && date <= end) {
+          byDate.set(date, validFlow(entry, series));
         }
       }
     }
-    
-    // Sort by date
-    historicalData.sort((a, b) => a.dateObj - b.dateObj);
-    cache.set(cacheKey, historicalData);
+    if (![...byDate.values()].some(value => value !== null)) return [];
+    const historicalData = [];
+    for (let day = new Date(`${start}T00:00:00Z`); formatDate(day) <= end; day.setUTCDate(day.getUTCDate() + 1)) {
+      const date = formatDate(day);
+      historicalData.push({ date, flow: byDate.get(date) ?? null, dateObj: new Date(day) });
+    }
+    remember(cacheKey, historicalData);
     return historicalData;
   } catch (err) {
     console.error('fetchHistoricalFlow error', err);
