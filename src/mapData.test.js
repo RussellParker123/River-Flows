@@ -1,6 +1,7 @@
 import {
   validCoordinate, gageKey, gagePoint, segmentRecords, filterRecords,
   recordsGeoJSON, gagesGeoJSON, readPlan, distanceMiles, measurementGeoJSON, gradeColor,
+  importPlan, exportPlan, exportGPX, PLAN_LIMIT, PLAN_FILE_LIMIT,
 } from './mapData';
 
 const rivers = [
@@ -79,4 +80,71 @@ test('colors exact and compound difficulty classes with unknown fallback', () =>
   expect(gradeColor('III')).not.toBe(gradeColor('II'));
   expect(gradeColor('Unknown')).toBe('#627785');
   expect(gradeColor('constructor')).toBe('#627785');
+});
+
+const waypoint = { id: 'portable-w1', name: 'Personal spot', kind: 'put-in', coordinates: [-110, 43] };
+const portable = { version: 1, waypoints: [waypoint], itinerary: [records[0].id, records[1].id, records[2].id] };
+
+test('portable JSON round trips version 1 stable IDs, repeats and coordinate order', () => {
+  const plan = { ...portable, itinerary: [...portable.itinerary, records[0].id] };
+  const reordered = segmentRecords([...rivers].reverse());
+  expect(JSON.parse(exportPlan(plan, records))).toEqual(plan);
+  expect(importPlan(exportPlan(plan, records), reordered)).toEqual({
+    waypoints: plan.waypoints, itinerary: plan.itinerary,
+  });
+  expect(importPlan('{"version":1,"waypoints":[],"itinerary":[]}', records)).toEqual({ waypoints: [], itinerary: [] });
+});
+
+test.each([
+  { ...portable, version: 2 },
+  { ...portable, itinerary: [records[0].id, 'unknown'] },
+  { ...portable, itinerary: [null] },
+  { ...portable, itinerary: Array(PLAN_LIMIT + 1).fill(records[0].id) },
+  { ...portable, waypoints: [waypoint, waypoint] },
+  { ...portable, waypoints: [waypoint, { ...waypoint, id: 'bad', coordinates: [0, 91] }] },
+  { ...portable, waypoints: [{ ...waypoint, id: '' }] },
+  { ...portable, waypoints: [{ ...waypoint, id: ' '.repeat(10) }] },
+  { ...portable, waypoints: [{ ...waypoint, id: 'x'.repeat(101) }] },
+  { ...portable, waypoints: [{ ...waypoint, name: ' ' }] },
+  { ...portable, waypoints: [{ ...waypoint, name: 'x'.repeat(101) }] },
+  { ...portable, waypoints: [{ ...waypoint, kind: 'verified access' }] },
+  { ...portable, waypoints: [{ ...waypoint, coordinates: ['-110', 43] }] },
+  { ...portable, waypoints: [{ ...waypoint, coordinates: [null, 43] }] },
+  { ...portable, waypoints: [{ ...waypoint, coordinates: [-110, 43, 0] }] },
+  { ...portable, waypoints: Array.from({ length: PLAN_LIMIT + 1 }, (_, index) => ({ ...waypoint, id: `w${index}` })) },
+])('refuses entire imported plan with any invalid entry (%#)', data => {
+  expect(() => importPlan(JSON.stringify(data), records)).toThrow(/Invalid plan/);
+});
+
+test('refuses malformed and oversized imports and strips extra data from portable exports', () => {
+  [null, undefined, {}, 'oops', 'null', '{}', ' '.repeat(PLAN_FILE_LIMIT + 1)].forEach(raw =>
+    expect(() => importPlan(raw, records)).toThrow());
+  const plan = { ...portable, waypoints: [{ ...waypoint, html: '<script>unsafe</script>' }], token: 'not exported' };
+  expect(JSON.parse(exportPlan(plan, records))).toEqual(portable);
+});
+
+test('GPX escapes XML, removes illegal XML characters, separates reaches and treats single locations as points', () => {
+  const name = `<script> & "'\u0000\u0001\uD800 🛶`;
+  const named = records.map(record => ({ ...record, river: { ...record.river, name }, segment: { ...record.segment, name } }));
+  const gpx = exportGPX({ ...portable, waypoints: [{ ...waypoint, name }] }, named);
+  expect(gpx).toContain('&lt;script&gt; &amp; &quot;&apos;');
+  expect(gpx).not.toMatch(/[\u0000\u0001\uD800]/u);
+  const xml = new DOMParser().parseFromString(gpx, 'application/xml');
+  expect(xml.querySelector('parsererror')).toBeNull();
+  expect(xml.documentElement.getAttribute('version')).toBe('1.1');
+  expect(xml.querySelectorAll('wpt')).toHaveLength(2);
+  expect(xml.querySelector('wpt').getAttribute('lat')).toBe('43');
+  expect(xml.querySelector('wpt').getAttribute('lon')).toBe('-110');
+  expect(xml.querySelectorAll('trk')).toHaveLength(2);
+  expect(xml.querySelectorAll('trkseg')).toHaveLength(2);
+  expect(xml.querySelectorAll('trkpt')).toHaveLength(4);
+  expect(xml.querySelector('wpt name').textContent).toContain('<script> & "\' 🛶');
+  expect(xml.querySelector('script')).toBeNull();
+});
+
+test('GPX skips unmapped entries without inventing geometry and rejects invalid waypoints', () => {
+  const unmapped = [{ ...records[0], coordinates: [] }];
+  const gpx = exportGPX({ waypoints: [], itinerary: [records[0].id] }, unmapped);
+  expect(gpx).not.toMatch(/<(trk|wpt)/);
+  expect(() => exportGPX({ ...portable, waypoints: [{ ...waypoint, coordinates: [Infinity, 0] }] }, records)).toThrow();
 });

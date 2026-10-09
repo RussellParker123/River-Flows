@@ -54,6 +54,13 @@ jest.mock('./CommentsSection', () => ({
   )
 }));
 
+jest.mock('./RiverMasterChat', () => ({
+  __esModule: true,
+  default: ({ river, segment }) => (
+    <div>River Master for {river.name} — {segment.name}</div>
+  )
+}), { virtual: true });
+
 jest.mock('@vercel/analytics/react', () => ({ Analytics: () => null }), { virtual: true });
 
 jest.mock('recharts', () => {
@@ -196,6 +203,7 @@ test('connects river details, comments, videos, and directions to the new map', 
     fireEvent.click(screen.getByRole('button', { name: 'Explore all rivers' }));
     expect(screen.getByRole('heading', { name: 'Flow Analysis - Gentle River - Test rapids' })).toBeInTheDocument();
     expect(screen.getByText('Comments for Gentle River (OR)')).toBeInTheDocument();
+    expect(screen.getByText('River Master for Gentle River — Test rapids')).toBeInTheDocument();
     expect(screen.getByText('Trip description')).toBeInTheDocument();
     expect(screen.getByText('Segment description')).toBeInTheDocument();
 

@@ -57,6 +57,8 @@ div.river-legend { display: flex; flex-wrap: wrap; gap: 8px; }
 .river-plan-list { padding-left: 20px; }
 .river-plan-list li { margin: 12px 0; }
 .river-plan-list li > span { display: block; margin-bottom: 6px; overflow-wrap: anywhere; }
+.river-panel input[type="file"] { font-weight: 400; }
+.river-actions + label { margin-top: 12px; }
 .river-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .river-details { overflow-wrap: anywhere; }
 .river-details img, .river-details iframe { max-width: 100%; }

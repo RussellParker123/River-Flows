@@ -9,6 +9,7 @@ import { fetchUSGSFlow, fetchHistoricalFlow } from './fetchUSGSFlow';
 import { rivers } from './rivers';
 import { CommentsSection } from './CommentsSection';
 import RiverMap from './RiverMap';
+import RiverMasterChat from './RiverMasterChat';
 
 const gradeColors = {
   'I': '#2ecc71',
@@ -517,6 +518,7 @@ function App() {
           onBack={() => setView('home')}
           renderDetails={(river, segment, flow) => (
             <>
+              <RiverMasterChat river={river} segment={segment} />
               <FlowChart river={river} currentFlow={flow} segment={segment} />
               <CommentsSection riverName={river.name} riverState={river.state} />
             </>

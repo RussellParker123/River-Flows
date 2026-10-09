@@ -6,8 +6,9 @@ import { rivers } from './rivers';
 import { fetchUSGSFlow } from './fetchUSGSFlow';
 import mapConfig from './mapConfig';
 import {
-  STORAGE_KEY, waypointKinds, gradeColor, gradeColors, segmentRecords, filterRecords, recordsGeoJSON,
+  STORAGE_KEY, PLAN_LIMIT, PLAN_FILE_LIMIT, waypointKinds, gradeColor, gradeColors, segmentRecords, filterRecords, recordsGeoJSON,
   gagesGeoJSON, waypointsGeoJSON, measurementGeoJSON, distanceMiles, readPlan, gageKey,
+  validCoordinate, importPlan, exportPlan, exportGPX,
 } from './mapData';
 
 const records = segmentRecords(rivers);
@@ -57,6 +58,8 @@ function syncOverlays(map, data) {
     'river-gages': gagesGeoJSON(data.visible),
     'river-waypoints': waypointsGeoJSON(data.waypoints),
     'river-measurement': measurementGeoJSON(data.measurement),
+    'river-trip': recordsGeoJSON(data.itinerary),
+    'river-selection': recordsGeoJSON(records.filter(record => record.id === data.selectedId)),
   };
   Object.entries(sources).forEach(([id, geojson]) => {
     if (map.getSource(id)) map.getSource(id).setData(geojson);
@@ -65,11 +68,15 @@ function syncOverlays(map, data) {
   const layers = [
     { id: 'river-lines', type: 'line', source: 'river-reaches', filter: ['==', '$type', 'LineString'],
       paint: { 'line-color': gradePaint, 'line-width': 4 } },
-    { id: 'river-selected', type: 'line', source: 'river-reaches',
+    { id: 'river-trip-lines', type: 'line', source: 'river-trip', filter: ['==', '$type', 'LineString'],
+      paint: { 'line-color': '#126e76', 'line-width': 9, 'line-opacity': .65 } },
+    { id: 'river-trip-points', type: 'circle', source: 'river-trip', filter: ['==', '$type', 'Point'],
+      paint: { 'circle-color': '#126e76', 'circle-radius': 11 } },
+    { id: 'river-selected', type: 'line', source: 'river-selection',
       filter: ['==', 'id', data.selectedId || ''], paint: { 'line-color': '#ffd166', 'line-width': 7 } },
     { id: 'river-points', type: 'circle', source: 'river-reaches', filter: ['==', '$type', 'Point'],
       paint: { 'circle-color': gradePaint, 'circle-radius': 7, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } },
-    { id: 'river-selected-point', type: 'circle', source: 'river-reaches',
+    { id: 'river-selected-point', type: 'circle', source: 'river-selection',
       filter: ['all', ['==', '$type', 'Point'], ['==', 'id', data.selectedId || '']],
       paint: { 'circle-color': '#ffd166', 'circle-radius': 9, 'circle-stroke-color': '#172d3f', 'circle-stroke-width': 2 } },
     { id: 'river-gage-points', type: 'circle', source: 'river-gages',
@@ -106,6 +113,10 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   const [mode, setMode] = useState('browse');
   const [waypointName, setWaypointName] = useState('');
   const [waypointKind, setWaypointKind] = useState('waypoint');
+  const [longitude, setLongitude] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [transferError, setTransferError] = useState('');
+  const [transferStatus, setTransferStatus] = useState('');
   const [measurement, setMeasurement] = useState([]);
   const [plan, setPlan] = useState({ waypoints: [], itinerary: [] });
   const [storageReady, setStorageReady] = useState(false);
@@ -123,9 +134,33 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   const latest = useRef(null);
   const needsStateFit = useRef(true);
   const previousBasemap = useRef('vector');
+  const importRequest = useRef(0);
   const visible = useMemo(() => filterRecords(records, { state, query, grade }), [state, query, grade]);
   const selected = records.find(record => record.id === selectedId);
-  latest.current = { visible, selectedId, terrain, waypoints: plan.waypoints, measurement, mode, waypointName, waypointKind };
+  const itinerary = useMemo(() => plan.itinerary.map(id => records.find(record => record.id === id)).filter(Boolean), [plan.itinerary]);
+  latest.current = { visible, selectedId, terrain, itinerary, waypoints: plan.waypoints, measurement, mode, waypointName, waypointKind };
+
+  const saveWaypoint = (point, name, kind) => {
+    name = name.trim();
+    if (!name || name.length > 100 || !waypointKinds.includes(kind) || !validCoordinate(point)) {
+      setToolStatus('Enter a name and valid longitude (-180 to 180) and latitude (-90 to 90).');
+      return;
+    }
+    if (latest.current.waypoints.length >= PLAN_LIMIT) {
+      setToolStatus('Waypoint limit reached (500). Delete a waypoint before adding another.');
+      return;
+    }
+    // Check the actual current plan, not just the button or a map-click closure.
+    setPlan(previous => previous.waypoints.length >= PLAN_LIMIT ? previous : {
+      ...previous, waypoints: [...previous.waypoints, {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name, kind, coordinates: point,
+      }],
+    });
+    setMode('browse');
+    setWaypointName('');
+    setToolStatus(`Saved ${name} on this device. Limit: 500 waypoints.`);
+  };
 
   useEffect(() => {
     try {
@@ -190,23 +225,16 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
     const click = event => {
       const data = latest.current;
       const point = [event.lngLat.lng, event.lngLat.lat];
+      if (!validCoordinate(point)) { setToolStatus('Map location is outside valid coordinate bounds.'); return; }
       if (data.mode === 'measure') {
         setMeasurement(previous => [...previous, point]);
         return;
       }
       if (data.mode === 'waypoint') {
-        const name = data.waypointName.trim();
-        if (!name) { setToolStatus('Enter a waypoint name before clicking the map.'); return; }
-        setPlan(previous => ({ ...previous, waypoints: [...previous.waypoints, {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          name, kind: data.waypointKind, coordinates: point,
-        }] }));
-        setMode('browse');
-        setWaypointName('');
-        setToolStatus(`Saved ${name} on this device.`);
+        saveWaypoint(point, data.waypointName, data.waypointKind);
         return;
       }
-      const layers = ['river-lines', 'river-points', 'river-gage-points'].filter(id => map.getLayer(id));
+      const layers = ['river-selected', 'river-selected-point', 'river-trip-lines', 'river-trip-points', 'river-lines', 'river-points', 'river-gage-points'].filter(id => map.getLayer(id));
       if (!layers.length) return;
       const features = map.queryRenderedFeatures(event.point, { layers });
       if (features.length) setSelectedId(features[0].properties.id);
@@ -255,6 +283,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
       }
       mapRef.current = null;
       styleReady.current = false;
+      importRequest.current += 1;
     };
   }, []);
 
@@ -263,7 +292,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
     if (!map || !styleReady.current) return;
     try { syncOverlays(map, latest.current); }
     catch { setMapError('Map overlays could not update. Use the river list.'); }
-  }, [visible, selectedId, plan.waypoints, measurement, terrain]);
+  }, [visible, selectedId, plan.waypoints, itinerary, measurement, terrain]);
 
   useEffect(() => {
     needsStateFit.current = true;
@@ -296,12 +325,56 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
     const key = gageKey(record.gage);
     return key ? flows[key] : null;
   };
-  const itinerary = plan.itinerary.map(id => records.find(record => record.id === id)).filter(Boolean);
   const moveTrip = (index, delta) => setPlan(previous => {
     const next = [...previous.itinerary];
     [next[index], next[index + delta]] = [next[index + delta], next[index]];
     return { ...previous, itinerary: next };
   });
+  const tripCoordinates = [...itinerary.flatMap(record => record.coordinates), ...plan.waypoints.map(point => point.coordinates)];
+  const download = format => {
+    let url;
+    try {
+      const content = format === 'json' ? exportPlan(plan, records) : exportGPX(plan, records);
+      url = URL.createObjectURL(new Blob([content], { type: format === 'json' ? 'application/json' : 'application/gpx+xml' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `river-flows-plan.${format}`;
+      document.body.appendChild(link);
+      try { link.click(); } finally { link.remove(); }
+      setTransferError('');
+      setTransferStatus(`Exported ${format.toUpperCase()}. GPX contains mapped geometry only, not a route.`);
+    } catch {
+      setTransferError('Unable to export this plan. Your current plan is unchanged.');
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+    }
+  };
+  const upload = event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    const request = ++importRequest.current;
+    setTransferStatus('');
+    setTransferError('');
+    if (!file) return;
+    if (file.size > PLAN_FILE_LIMIT) {
+      setTransferError('Plan file exceeds 1 MB. Nothing was imported.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (request !== importRequest.current) return;
+      try {
+        const imported = importPlan(reader.result, records);
+        setPlan(imported);
+        setMode('browse');
+        setTransferStatus('Imported plan replaced your waypoints and itinerary.');
+      } catch (error) { setTransferError(error.message); }
+    };
+    reader.onerror = () => {
+      if (request === importRequest.current) setTransferError('Unable to read plan file. Nothing was imported.');
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <main ref={workspace} className={`river-workspace${mapFailed ? ' river-map-unavailable' : ''}`}>
@@ -334,7 +407,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
               <i style={{ background: color }} aria-hidden="true" />Class {className}
             </span>)}
           </div>
-          <p className="river-legend">Compound classes use the first class color; gray means unknown. Yellow: selected segment · Purple dots: gage / flow lookup point · Orange: user waypoint or measurement</p>
+          <p className="river-legend">Compound classes use the first class color; gray means unknown. Yellow: selected segment · Teal: trip segments (no connections) · Purple dots: gage / flow lookup point · Orange: user waypoint or measurement</p>
         </section>
         <section aria-labelledby="river-search-heading">
           <h2 id="river-search-heading">Explore rivers</h2>
@@ -370,23 +443,31 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
             End: {selected.coordinates[selected.coordinates.length - 1].map(value => value.toFixed(4)).join(', ')}.
             Coordinates are longitude, latitude; endpoints are not verified access.
           </p> : <p>{selected.coordinates.length ? 'Only a single location is mapped; no reach length or access is established.' : 'No mapped geometry is available.'}</p>}
-          <button type="button" disabled={plan.itinerary.length >= 500}
-            onClick={() => setPlan(previous => ({ ...previous, itinerary: [...previous.itinerary, selected.id] }))}>
+          <button type="button" disabled={plan.itinerary.length >= PLAN_LIMIT}
+            onClick={() => setPlan(previous => previous.itinerary.length >= PLAN_LIMIT ? previous : ({ ...previous, itinerary: [...previous.itinerary, selected.id] }))}>
             Add segment to trip
           </button>
           {renderDetails && renderDetails(selected.river, selected.segment, getFlow(selected))}
         </section>}
         <section aria-labelledby="river-waypoint-heading">
           <h2 id="river-waypoint-heading">Personal waypoints</h2>
-          <p>User-entered locations are not verified access sites. Saved only on this device.</p>
+          <p>User-entered locations are not verified access sites. Saved on this device; export to keep a portable copy.</p>
           <label>Waypoint name<input maxLength={100} value={waypointName}
             onChange={event => setWaypointName(event.target.value)} /></label>
           <label>Waypoint kind<select value={waypointKind} onChange={event => setWaypointKind(event.target.value)}>
             {waypointKinds.map(kind => <option key={kind}>{kind}</option>)}
           </select></label>
-          <button type="button" aria-pressed={mode === 'waypoint'} disabled={mapFailed || plan.waypoints.length >= 500}
+          <button type="button" aria-pressed={mode === 'waypoint'} disabled={mapFailed || plan.waypoints.length >= PLAN_LIMIT}
             onClick={() => { setMode(mode === 'waypoint' ? 'browse' : 'waypoint'); setToolStatus(''); }}>
             {mode === 'waypoint' ? 'Cancel waypoint' : 'Add by clicking map'}
+          </button>
+          <div className="river-filter-row">
+            <label>Waypoint longitude<input type="number" min="-180" max="180" step="any" value={longitude} onChange={event => setLongitude(event.target.value)} /></label>
+            <label>Waypoint latitude<input type="number" min="-90" max="90" step="any" value={latitude} onChange={event => setLatitude(event.target.value)} /></label>
+          </div>
+          <button type="button" disabled={plan.waypoints.length >= PLAN_LIMIT}
+            onClick={() => saveWaypoint([longitude.trim() ? Number(longitude) : NaN, latitude.trim() ? Number(latitude) : NaN], waypointName, waypointKind)}>
+            Add by coordinates
           </button>
           {mode === 'waypoint' && <p role="status">Enter a name, then click the map to save a {waypointKind}.</p>}
           <p role="status">{toolStatus}</p>
@@ -411,10 +492,16 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
         <section aria-labelledby="river-trip-heading">
           <h2 id="river-trip-heading">Trip itinerary</h2>
           <p>Ordered notes only, not a routed journey or safe navigation. Distances exclude connections between segments. Saved on this device, not a server.</p>
+          <button type="button" disabled={mapFailed || !tripCoordinates.length}
+            onClick={() => {
+              try { fitRecord(mapRef.current, { coordinates: tripCoordinates }); }
+              catch { setMapError('Unable to fit the trip. Your itinerary remains available below.'); }
+            }}>Fit whole trip</button>
           <ol className="river-plan-list">{itinerary.map((record, index) => <li key={`${record.id}-${index}`}>
             <span>{record.river.name} — {record.segment.name}<br />
               {record.coordinates.length > 1 ? `${distanceMiles(record.coordinates).toFixed(1)} approximate miles` : 'Length unavailable'}
             </span><div className="river-actions">
+              <button type="button" aria-label={`Select trip item ${index + 1}`} aria-pressed={selectedId === record.id} onClick={() => selectRecord(record)}>Select</button>
               <button type="button" aria-label={`Move trip item ${index + 1} up`} disabled={index === 0} onClick={() => moveTrip(index, -1)}>↑</button>
               <button type="button" aria-label={`Move trip item ${index + 1} down`} disabled={index === itinerary.length - 1} onClick={() => moveTrip(index, 1)}>↓</button>
               <button type="button" aria-label={`Remove trip item ${index + 1}`}
@@ -423,6 +510,17 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
           </li>)}</ol>
           <p>Approximate mapped total: {itinerary.reduce((total, record) => total + distanceMiles(record.coordinates), 0).toFixed(1)} miles
             {itinerary.some(record => record.coordinates.length < 2) ? ' (incomplete: some lengths unavailable)' : ''}</p>
+        </section>
+        <section aria-labelledby="river-transfer-heading">
+          <h2 id="river-transfer-heading">Portable plan</h2>
+          <p>JSON keeps version 1 segment IDs and personal waypoints. Import replaces the whole plan only if every entry is valid. GPX exports separate mapped tracks and points, not routing, verified access or offline maps.</p>
+          <div className="river-actions">
+            <button type="button" onClick={() => download('json')}>Export plan JSON</button>
+            <button type="button" onClick={() => download('gpx')}>Export GPX</button>
+          </div>
+          <label>Import plan JSON<input type="file" accept=".json,application/json" onChange={upload} /></label>
+          {transferError && <p role="alert" className="river-notice">{transferError}</p>}
+          {transferStatus && <p role="status">{transferStatus}</p>}
         </section>
       </aside>
     </main>

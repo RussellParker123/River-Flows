@@ -17,7 +17,8 @@ Use Node.js 22.12+ (or a newer supported LTS), then run `npm ci`.
 
 Deploy `build/` with a fallback to `index.html`. The existing
 `api/aww-flows.js` still needs a serverless-capable host; Vite does not serve
-serverless functions during local development.
+serverless functions during local development, except for the River Master
+endpoint served by the dedicated development middleware below.
 
 ## Map providers
 
@@ -70,9 +71,75 @@ synced to an account or another device. Clearing site data deletes them.
 Storage errors are surfaced in the interface. Switching map styles
 preserves river selection and planning overlays.
 
+Export a versioned JSON plan to back it up or transfer it to another browser;
+importing a valid plan replaces the current waypoints and itinerary. Invalid
+files are rejected without replacing your plan. GPX export contains separate
+tracks for mapped itinerary reaches and your personal waypoints, not directions
+or verified access. Point-only records cannot establish a river track.
+The trip overview highlights saved reaches and can fit them in the map.
+Coordinate entry allows adding personal waypoints even without WebGL.
+Treat exported waypoint locations as private information before sharing.
+
 Flow and difficulty do **not** imply a river is safe or runnable. Geometry
 and endpoints may be approximate. Verify conditions, access, closures,
 weather, and your abilities before travel.
+
+## Live River Master AI chat
+
+Select a reach in the explorer to chat with River Master. This is a streaming
+AI assistant, not a human guide or an emergency service. Email sign-in is
+required; responses come from a real model through `/api/river-master`, not
+scripted answers. Missing configuration and provider failures are shown as
+errors rather than fabricated responses.
+
+The server resolves the selected river/state/segment against the bundled
+catalog and attempts a fresh USGS discharge lookup for an exact catalog gauge.
+Gauge data includes provenance and observation time when available; nearby
+coordinate-based lookups are not used as verified reach data. A discharge,
+mapped difficulty, or AI answer never establishes runnable conditions, legal
+access, closures, or safety.
+
+### Server configuration
+
+Use Node.js 22.12+ and set these **server-only** variables in `.env.local`
+for development or in your serverless host's runtime environment:
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Private OpenAI API credential |
+| `OPENAI_MODEL` | Optional chat-completions model; defaults to `gpt-4o-mini` |
+| `SUPABASE_URL` | Same Supabase project URL used by `src/supabaseClient.js` |
+| `SUPABASE_PUBLISHABLE_KEY` | That project's publishable key (`SUPABASE_ANON_KEY` is also supported) |
+
+Never prefix private credentials with `VITE_` or commit them. No service-role
+key is needed: the API validates the caller's bearer session with Supabase
+Auth before contacting the model. The existing browser Supabase project
+configuration must match the server configuration.
+
+Enable email authentication and configure Supabase's email template to include
+`{{ .Token }}` so users can enter the emailed one-time code in the chat panel.
+Configure SMTP delivery and Auth rate limits for your deployment. Test code
+delivery and verification in the same project before enabling live chat.
+
+`npm start` serves the chat API locally through Vite's server-only middleware.
+`npm run preview` is static and does not serve the API. In production, deploy
+`api/river-master.js` on a Node serverless-capable host (such as Vercel) alongside
+the `build/` assets; exclude `/api/*` from SPA fallback rewrites and allow
+streaming responses and outbound HTTPS to Supabase, OpenAI, and USGS.
+A static-only deployment cannot provide AI chat.
+
+The API bounds input, output, timeouts, and per-user request bursts. Its
+in-memory limiter is **per process**, not a durable cross-instance quota.
+Before public deployment, add platform/gateway rate limits, configure provider
+spend limits, and protect Supabase sign-up from abuse; authentication alone is
+not cost protection. No production credentials or hosted services are
+provisioned by this repository.
+
+Chat history stays in the current UI session and resets when changing reach,
+account, or clearing the conversation. Supabase can persist the sign-in
+session. Messages and river context are sent to the configured model provider;
+its retention and privacy policies apply. Do not submit sensitive information.
+Stop cancels the client request but cannot reverse provider work already done.
 
 ## Later phase: offline navigation
 

@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import RiverMap from './RiverMap';
 import * as maplibregl from 'maplibre-gl';
 import { fetchUSGSFlow } from './fetchUSGSFlow';
-import { STORAGE_KEY, segmentId } from './mapData';
+import { STORAGE_KEY, segmentId, PLAN_LIMIT, PLAN_FILE_LIMIT } from './mapData';
 
 const upperId = segmentId({ state: 'WY', name: 'Test River' }, { name: 'Upper Test' });
 const gageId = segmentId({ state: 'WY', name: 'Test River' }, { name: 'Test Gage' });
@@ -263,5 +263,179 @@ test('refreshes every five minutes and ignores stale requests after filter chang
     expect(fetchUSGSFlow).toHaveBeenCalledWith('12345', { refresh: true });
   } finally {
     jest.useRealTimers();
+  }
+});
+
+const savedWaypoint = { id: 'w1', name: 'Existing point', kind: 'waypoint', coordinates: [-109, 42] };
+
+function uploadPlan(data) {
+  const file = new File([typeof data === 'string' ? data : JSON.stringify(data)], 'trip.json', { type: 'application/json' });
+  fireEvent.change(screen.getByLabelText('Import plan JSON'), { target: { files: [file] } });
+}
+
+test('imports valid portable plans and refuses partial, malformed and oversized replacement', async () => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, waypoints: [savedWaypoint], itinerary: [upperId] }));
+  render(<RiverMap />);
+  await screen.findAllByText('0 cfs');
+  loadStyle();
+  const original = localStorage.getItem(STORAGE_KEY);
+  uploadPlan({ version: 1, waypoints: [savedWaypoint], itinerary: [gageId, 'missing'] });
+  await screen.findByText(/Invalid plan\. Check/);
+  expect(localStorage.getItem(STORAGE_KEY)).toBe(original);
+  expect(currentMap().sources['river-trip'].data.features[0].properties.id).toBe(upperId);
+  uploadPlan('not JSON');
+  await screen.findByText(/Invalid plan\. Check/);
+  expect(localStorage.getItem(STORAGE_KEY)).toBe(original);
+  const large = new File([' '.repeat(PLAN_FILE_LIMIT + 1)], 'large.json');
+  fireEvent.change(screen.getByLabelText('Import plan JSON'), { target: { files: [large] } });
+  expect(screen.getByText(/exceeds 1 MB/)).toBeInTheDocument();
+  expect(localStorage.getItem(STORAGE_KEY)).toBe(original);
+  const imported = { version: 1, waypoints: [{ ...savedWaypoint, name: '<b>Portable</b>' }], itinerary: [gageId, upperId] };
+  uploadPlan(imported);
+  await screen.findByText(/Imported plan replaced/);
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY))).toEqual(imported);
+  expect(screen.getByText('<b>Portable</b>')).toBeInTheDocument();
+  expect(currentMap().sources['river-trip'].data.features.map(feature => feature.properties.id)).toEqual([gageId, upperId]);
+});
+
+test('itinerary overlay survives filters and style rebuilding; items select and whole-trip fit includes waypoints', async () => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, waypoints: [savedWaypoint], itinerary: [upperId, gageId] }));
+  render(<RiverMap />);
+  await screen.findAllByText('0 cfs');
+  loadStyle();
+  const map = currentMap();
+  fireEvent.change(screen.getByLabelText('State'), { target: { value: 'CO' } });
+  await screen.findAllByText('0 cfs');
+  expect(map.sources['river-trip'].data.features).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Select trip item 1' }));
+  expect(screen.getByRole('heading', { name: 'Upper Test' })).toBeInTheDocument();
+  expect(map.sources['river-selection'].data.features[0].properties.id).toBe(upperId);
+  fireEvent.click(screen.getByRole('button', { name: 'Fit whole trip' }));
+  const bounds = maplibregl.LngLatBounds.mock.results[maplibregl.LngLatBounds.mock.results.length - 1].value;
+  expect(bounds.extend.mock.calls.map(([point]) => point)).toEqual([[-110, 43], [-110, 44], [-110, 43], [-109, 42]]);
+  fireEvent.change(screen.getByLabelText('Basemap'), { target: { value: 'satellite' } });
+  loadStyle();
+  expect(map.sources['river-trip'].data.features).toHaveLength(2);
+  expect(map.sources['river-selection'].data.features[0].properties.id).toBe(upperId);
+  expect(map.layers['river-trip-lines'].filter).toEqual(['==', '$type', 'LineString']);
+  expect(map.layers['river-trip-points'].filter).toEqual(['==', '$type', 'Point']);
+  map.queryRenderedFeatures.mockReturnValue([{ properties: { id: gageId } }]);
+  clickMap();
+  expect(screen.getByRole('heading', { name: 'Test Gage' })).toBeInTheDocument();
+  expect(map.queryRenderedFeatures).toHaveBeenLastCalledWith(expect.any(Object), { layers: expect.arrayContaining(['river-trip-lines', 'river-trip-points']) });
+  await act(async () => { await Promise.resolve(); });
+});
+
+test('coordinate waypoints work without WebGL and validate blanks and bounds', async () => {
+  maplibregl.Map.mockImplementationOnce(() => { throw new Error('WebGL unavailable'); });
+  render(<RiverMap />);
+  await screen.findAllByText('0 cfs');
+  expect(screen.getByRole('button', { name: 'Fit whole trip' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Waypoint name'), { target: { value: 'Manual point' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add by coordinates' }));
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).waypoints).toEqual([]);
+  fireEvent.change(screen.getByLabelText('Waypoint longitude'), { target: { value: '-181' } });
+  fireEvent.change(screen.getByLabelText('Waypoint latitude'), { target: { value: '0' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add by coordinates' }));
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).waypoints).toEqual([]);
+  fireEvent.change(screen.getByLabelText('Waypoint longitude'), { target: { value: '0' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add by coordinates' }));
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).waypoints[0]).toMatchObject({ name: 'Manual point', coordinates: [0, 0] });
+  expect(screen.getByText('Manual point')).toBeInTheDocument();
+});
+
+test('actual waypoint handler bounds rapid queued map clicks at 500', async () => {
+  const waypoints = Array.from({ length: PLAN_LIMIT - 1 }, (_, index) => ({ ...savedWaypoint, id: `w${index}`, name: `Point ${index}` }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, waypoints, itinerary: [] }));
+  render(<RiverMap />);
+  await screen.findAllByText('0 cfs');
+  loadStyle();
+  fireEvent.change(screen.getByLabelText('Waypoint name'), { target: { value: 'Last point' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add by clicking map' }));
+  const click = currentMap().events.click;
+  act(() => {
+    click({ lngLat: { lng: -110, lat: 43 } });
+    click({ lngLat: { lng: -110, lat: 44 } });
+  });
+
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).waypoints).toHaveLength(PLAN_LIMIT);
+  expect(currentMap().sources['river-waypoints'].data.features).toHaveLength(PLAN_LIMIT);
+  expect(screen.getByRole('button', { name: 'Add by coordinates' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add by clicking map' })).toBeDisabled();
+});
+
+test('pending imports cannot overwrite a newer selection and read failures preserve the current plan', async () => {
+  const original = { version: 1, waypoints: [savedWaypoint], itinerary: [upperId] };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(original));
+  const readers = [];
+  const nativeReader = window.FileReader;
+  window.FileReader = jest.fn().mockImplementation(() => {
+    const reader = { readAsText: jest.fn() };
+    readers.push(reader);
+    return reader;
+  });
+  try {
+    const { unmount } = render(<RiverMap />);
+    await screen.findAllByText('0 cfs');
+    uploadPlan(original);
+    uploadPlan(original);
+    act(() => {
+      readers[1].result = JSON.stringify({ version: 1, waypoints: [], itinerary: [gageId] });
+      readers[1].onload();
+      readers[0].result = JSON.stringify(original);
+      readers[0].onload();
+    });
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual([gageId]);
+    uploadPlan(original);
+    act(() => readers[2].onerror());
+    expect(screen.getByText(/Unable to read plan file/)).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual([gageId]);
+    uploadPlan(original);
+    unmount();
+    act(() => {
+      readers[3].result = JSON.stringify(original);
+      readers[3].onload();
+    });
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)).itinerary).toEqual([gageId]);
+  } finally {
+    window.FileReader = nativeReader;
+  }
+});
+
+test('exports downloadable JSON and GPX and cleans up object URLs without WebGL', async () => {
+  const plan = { version: 1, waypoints: [{ ...savedWaypoint, name: '<Unsafe & name>' }], itinerary: [upperId, gageId] };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
+  maplibregl.Map.mockImplementationOnce(() => { throw new Error('WebGL unavailable'); });
+  const blobs = [];
+  const create = jest.fn(blob => { blobs.push(blob); return 'blob:test'; });
+  const revoke = jest.fn();
+  const oldCreate = URL.createObjectURL;
+  const oldRevoke = URL.revokeObjectURL;
+  URL.createObjectURL = create;
+  URL.revokeObjectURL = revoke;
+  const links = [];
+  const anchorClick = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () {
+    links.push({ href: this.href, download: this.download });
+  });
+  try {
+    render(<RiverMap />);
+    await screen.findAllByText('0 cfs');
+    fireEvent.click(screen.getByRole('button', { name: 'Export plan JSON' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Export GPX' }));
+    const texts = await Promise.all(blobs.map(blob => new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsText(blob);
+    })));
+    expect(JSON.parse(texts[0])).toEqual(plan);
+    expect(texts[1]).toContain('&lt;Unsafe &amp; name&gt;');
+    expect(blobs.map(blob => blob.type)).toEqual(['application/json', 'application/gpx+xml']);
+    expect(links.map(link => link.download)).toEqual(['river-flows-plan.json', 'river-flows-plan.gpx']);
+    expect(revoke).toHaveBeenCalledTimes(2);
+    expect(document.querySelector('a[download]')).toBeNull();
+  } finally {
+    URL.createObjectURL = oldCreate;
+    URL.revokeObjectURL = oldRevoke;
+    anchorClick.mockRestore();
   }
 });
