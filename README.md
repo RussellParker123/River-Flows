@@ -74,6 +74,7 @@ connection. Configure these variables in your server deployment, not the browser
 | `RIVER_MASTER_IP_HASH_SECRET` | Random secret of at least 32 characters for hashing rate-limit identifiers. |
 | `CRON_SECRET` | Random secret of at least 24 characters; authenticates scheduled jobs and private status requests. |
 | `RIVER_MASTER_OWN_ORIGIN` | Optional HTTPS origin of this website for its manifest health check; no path, credentials, query, or non-default port. |
+| `RIVER_MASTER_COMMUNITY_COMMENTS_ENABLED` | Optional `true` opt-in to send bounded, privacy-filtered public comment excerpts to Claude; disabled by default. Review your privacy notice before enabling. |
 
 Chat and coordinator calls share atomic database-backed reservations. Ambiguous
 upstream failures retain their reservation rather than retrying a possibly billed
@@ -85,6 +86,10 @@ of that month's `rm_months` record. Keep configured model prices current and do 
 lower prices below the provider's applicable rates.
 
 Vercel schedules collection every 15 minutes and the coordinator daily at 06:00 UTC.
+Collection stores instantaneous discharge and the last 30 days of official daily
+means. Chat can reference persisted daily records but must not invent all-time
+records or longer-term trends outside that coverage. The browser chart separately
+requests a year of official daily means.
 The coordinator rotates through rivers and saves specialist proposals and a
 prioritized River Master report. It is not a continuous autonomous coding service:
 its maintenance check observes the site manifest, and proposed fixes still need a
@@ -108,6 +113,14 @@ query parameters. It displays a measurement as section-verified only when its
 association was approved. Readings older than two hours are marked stale.
 This read-only public endpoint exposes measurement provenance, not private
 proposals, spending records, or administrative capabilities.
+
+Research is limited to the configured official USGS sources and existing site
+context; it does not browse arbitrary websites or automatically verify descriptions,
+access points, closures, or hazards. The community agent does not post replies.
+With comment access disabled it proposes engagement ideas without claiming to have
+reviewed feedback. Enabling excerpts excludes identity fields, removes common contact
+information and links, and withholds suspected credentials; filtering cannot
+guarantee that user-written content contains no personal information.
 
 ## Available Scripts
 
