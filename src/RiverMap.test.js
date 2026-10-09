@@ -49,7 +49,9 @@ jest.mock('maplibre-gl', () => {
       getCanvas: () => canvas,
       getContainer: () => ({ clientWidth: 1024, clientHeight: 768 }),
       getSource: id => sources[id],
-      addSource: jest.fn((id, source) => { sources[id] = { ...source, setData: jest.fn() }; }),
+      addSource: jest.fn((id, source) => {
+        sources[id] = { ...source, setData: jest.fn(data => { sources[id].data = data; }) };
+      }),
       getLayer: id => layers[id],
       addLayer: jest.fn(layer => { layers[layer.id] = layer; }),
       setFilter: jest.fn(),
@@ -59,7 +61,7 @@ jest.mock('maplibre-gl', () => {
         Object.keys(sources).forEach(key => delete sources[key]);
         Object.keys(layers).forEach(key => delete layers[key]);
       }),
-      isStyleLoaded: () => true,
+      isStyleLoaded: jest.fn(() => true),
       queryRenderedFeatures: jest.fn(() => []),
       fitBounds: jest.fn(), flyTo: jest.fn(), resize: jest.fn(), remove: jest.fn(),
     };
@@ -171,6 +173,10 @@ test('recreates overlays after satellite style swaps, applies terrain, selects m
   fireEvent.click(screen.getByLabelText('3D terrain'));
   expect(map.sources['river-terrain']).toMatchObject({ type: 'raster-dem', encoding: 'mapbox', tileSize: 256 });
   expect(map.setTerrain).toHaveBeenLastCalledWith({ source: 'river-terrain', exaggeration: 1 });
+  expect(maplibregl.FullscreenControl).toHaveBeenCalledWith({ container: screen.getByRole('main') });
+  expect(maplibregl.GeolocateControl).toHaveBeenCalledWith({
+    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true,
+  });
   const location = maplibregl.controlInstances[2];
   act(() => location.on.mock.calls[0][1]());
   expect(screen.getByRole('alert')).toHaveTextContent('permission denied');
@@ -218,6 +224,26 @@ test('fits the initial and changed state geometry without reloading the initial 
   expect(map.layers['river-lines'].paint['line-color']).toEqual(expect.arrayContaining(['III-IV', '#8544ad']));
 });
 
+test('applies current overlays while sources are loading and queues updates before style initialization', async () => {
+  render(<RiverMap initialState="WY" />);
+  await screen.findAllByText(/0 cfs/);
+  const map = currentMap();
+  map.isStyleLoaded.mockReturnValue(false);
+  fireEvent.change(screen.getByLabelText('State'), { target: { value: 'CO' } });
+  expect(map.sources['river-reaches']).toBeUndefined();
+  loadStyle();
+  expect(map.sources['river-reaches'].data.features).toHaveLength(1);
+  fireEvent.change(screen.getByLabelText('State'), { target: { value: 'WY' } });
+  expect(map.sources['river-reaches'].data.features).toHaveLength(2);
+  fireEvent.change(screen.getByLabelText('Waypoint name'), { target: { value: 'Pending tiles waypoint' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add by clicking map' }));
+  clickMap();
+  expect(map.sources['river-waypoints'].data.features[0].properties.name).toBe('Pending tiles waypoint');
+  expect(map.sources['river-reaches'].setData.mock.calls.length).toBeLessThan(10);
+  expect(map.isStyleLoaded).not.toHaveBeenCalled();
+  await screen.findAllByText(/0 cfs/);
+});
+
 test('refreshes every five minutes and ignores stale requests after filter changes', async () => {
   jest.useFakeTimers();
   try {
@@ -225,7 +251,7 @@ test('refreshes every five minutes and ignores stale requests after filter chang
     fetchUSGSFlow.mockImplementation(gage => gage === '12345'
       ? new Promise(resolve => { oldResolve = resolve; }) : Promise.resolve(12));
     render(<RiverMap initialState="WY" />);
-    await waitFor(() => expect(fetchUSGSFlow).toHaveBeenCalledWith('12345'));
+    await waitFor(() => expect(fetchUSGSFlow).toHaveBeenCalledWith('12345', { refresh: false }));
     fireEvent.change(screen.getByLabelText('State'), { target: { value: 'CO' } });
     await screen.findByText('12 cfs');
     await act(async () => oldResolve(999));
@@ -234,6 +260,7 @@ test('refreshes every five minutes and ignores stale requests after filter chang
     fetchUSGSFlow.mockResolvedValue(50);
     await act(async () => { jest.advanceTimersByTime(300000); });
     await waitFor(() => expect(screen.getAllByText(/50 cfs/)).toHaveLength(2));
+    expect(fetchUSGSFlow).toHaveBeenCalledWith('12345', { refresh: true });
   } finally {
     jest.useRealTimers();
   }

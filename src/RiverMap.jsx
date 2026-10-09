@@ -117,7 +117,9 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   const [flows, setFlows] = useState({});
   const [refresh, setRefresh] = useState(0);
   const container = useRef(null);
+  const workspace = useRef(null);
   const mapRef = useRef(null);
+  const styleReady = useRef(false);
   const latest = useRef(null);
   const needsStateFit = useRef(true);
   const previousBasemap = useRef('vector');
@@ -155,7 +157,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
       if (key) gages.set(key, record.gage);
     });
     gages.forEach((gage, key) => {
-      Promise.resolve().then(() => fetchUSGSFlow(gage)).then(flow => {
+      Promise.resolve().then(() => fetchUSGSFlow(gage, { refresh: refresh > 0 })).then(flow => {
         if (active) setFlows(previous => ({ ...previous,
           [key]: typeof flow === 'number' && Number.isFinite(flow) ? flow : null }));
       }).catch(() => {
@@ -172,6 +174,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
     let geolocate;
     const geolocationError = () => setLocationError('Location unavailable or permission denied. You can still browse rivers.');
     const styleLoaded = () => {
+      styleReady.current = true;
       try {
         syncOverlays(map, latest.current);
         if (needsStateFit.current) {
@@ -220,9 +223,9 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
       });
       mapRef.current = map;
       map.addControl(new maplibregl.NavigationControl(), 'top-right');
-      map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+      map.addControl(new maplibregl.FullscreenControl({ container: workspace.current }), 'top-right');
       geolocate = new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true }, trackUserLocation: false,
+        positionOptions: { enableHighAccuracy: true }, trackUserLocation: true,
       });
       geolocate.on('error', geolocationError);
       map.addControl(geolocate, 'top-right');
@@ -251,12 +254,13 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
         map.remove();
       }
       mapRef.current = null;
+      styleReady.current = false;
     };
   }, []);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !styleReady.current) return;
     try { syncOverlays(map, latest.current); }
     catch { setMapError('Map overlays could not update. Use the river list.'); }
   }, [visible, selectedId, plan.waypoints, measurement, terrain]);
@@ -264,7 +268,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   useEffect(() => {
     needsStateFit.current = true;
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !styleReady.current) return;
     try {
       fitRecord(map, { coordinates: latest.current.visible.flatMap(record => record.coordinates) });
       needsStateFit.current = false;
@@ -278,6 +282,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
     previousBasemap.current = basemap;
     const map = mapRef.current;
     if (!map) return;
+    styleReady.current = false;
     try { map.setStyle(basemap === 'satellite' ? rasterStyle() : mapConfig.style || demoStyle); }
     catch { setMapError('Basemap could not be changed. Use the river list.'); }
   }, [basemap]);
@@ -299,7 +304,7 @@ export default function RiverMap({ initialState, onBack, renderDetails }) {
   });
 
   return (
-    <main className={`river-workspace${mapFailed ? ' river-map-unavailable' : ''}`}>
+    <main ref={workspace} className={`river-workspace${mapFailed ? ' river-map-unavailable' : ''}`}>
       <div ref={container} className="river-map-canvas" role="region" aria-label="Interactive river map" />
       <aside className="river-panel" aria-label="River explorer and trip planner">
         <header className="river-panel-header">
